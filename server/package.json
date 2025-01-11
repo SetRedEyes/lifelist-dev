@@ -1,0 +1,43 @@
+{
+  "name": "lifelist-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "server.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WyattBensman/lifelist-development.git"
+  },
+  "author": "Wyatt Bensman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WyattBensman/lifelist-development/issues"
+  },
+  "homepage": "https://github.com/WyattBensman/lifelist-development#readme",
+  "dependencies": {
+    "@apollo/server": "^4.11.2",
+    "@as-integrations/aws-lambda": "^3.1.0",
+    "apollo-server-errors": "^3.3.1",
+    "aws-sdk": "^2.1692.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "graphql": "^16.9.0",
+    "graphql-upload": "^16.0.2",
+    "jimp": "^0.22.12",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.7.0",
+    "mongoose": "^8.1.2",
+    "node-cron": "^3.0.3",
+    "node-schedule": "^2.1.1",
+    "sanitize-filename": "^1.6.3",
+    "serverless": "^4.4.11",
+    "util": "^0.12.5",
+    "uuid": "^9.0.1"
+  }
+}

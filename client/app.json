@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "LifeList",
+    "slug": "lifelist",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/lifelist-icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/lifelist-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "com.lifelist",
+      "buildNumber": "1.0.1",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow LifeList to access your camera"
+        }
+      ],
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4fa51d41-7f46-4644-8ed9-4ff160efb297"
+      }
+    },
+    "owner": "wyattbensman",
+    "experimental": {
+      "enableBridgelessMode": false
+    }
+  }
+}
