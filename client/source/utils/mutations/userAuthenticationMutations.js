@@ -83,3 +83,25 @@ export const UPDATE_INVITE_STATUS = gql`
     }
   }
 `;
+
+// === Mutation: Send the Phone Verification Code === //
+
+export const SEND_PHONE_VERIFICATION_CODE = gql`
+  mutation SendPhoneVerificationCode($phoneNumber: String!) {
+    sendPhoneVerificationCode(phoneNumber: $phoneNumber) {
+      success
+      sessionInfo
+    }
+  }
+`;
+
+// === Mutation: Verify Phone Code === //
+
+export const VERIFY_PHONE_CODE = gql`
+  mutation VerifyPhoneCode($sessionInfo: String!, $code: String!) {
+    verifyPhoneCode(sessionInfo: $sessionInfo, code: $code) {
+      success
+      token
+    }
+  }
+`;

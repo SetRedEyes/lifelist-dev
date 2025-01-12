@@ -60,26 +60,59 @@ export default function SignUp() {
     validateInputs();
   }, [formattedPhoneNumber]);
 
-  const handleNextStep = async () => {
+  // Setup Recaptcha for OTP
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        "recaptcha-container",
+        {
+          size: "invisible",
+          callback: (response) => {
+            console.log("Recaptcha verified");
+          },
+        },
+        auth
+      );
+    }
+  };
+
+  // Handle Send OTP with backend validation
+  const handleSendOtp = async () => {
+    if (!isValid) {
+      Alert.alert("Invalid Phone Number", "Please enter a valid phone number.");
+      return;
+    }
+
     try {
-      const cleanedPhoneNumber = formattedPhoneNumber.replace(/\D/g, "");
-
-      updateProfile("phoneNumber", cleanedPhoneNumber);
-
-      const variables = {
-        phoneNumber: cleanedPhoneNumber,
-      };
-
-      const { data } = await validatePhoneNumber({ variables });
+      // Step 1: Check if the phone number is already taken
+      const { data } = await validatePhoneNumber({
+        variables: { phoneNumber },
+      });
 
       if (data.validatePhoneNumber.success) {
-        navigation.navigate("VerifyAccount");
-      } else {
-        Alert.alert("Validation Error", data.validatePhoneNumber.message);
+        Alert.alert("Phone Number Taken", data.validatePhoneNumber.message);
+        return;
       }
+
+      // Step 2: Proceed with sending OTP using Firebase
+      setupRecaptcha();
+      setLoadingOtp(true);
+      const appVerifier = window.recaptchaVerifier;
+
+      const confirmationResult = await signInWithPhoneNumber(
+        auth,
+        phoneNumber,
+        appVerifier
+      );
+      window.confirmationResult = confirmationResult;
+
+      Alert.alert("Success", "OTP sent!");
+      navigation.navigate("VerifyAccount", { phoneNumber });
     } catch (error) {
-      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+      Alert.alert("Error", "Something went wrong. Please try again.");
       console.error(error);
+    } finally {
+      setLoadingOtp(false);
     }
   };
 
@@ -122,24 +155,6 @@ export default function SignUp() {
           text={loading ? "Loading..." : "Create Account"}
           onPress={isValid && !loading ? handleNextStep : null}
         />
-
-        <View style={authenticationStyles.orContainer}>
-          <View style={authenticationStyles.leftLine} />
-          <Text style={authenticationStyles.orText}>or</Text>
-          <View style={authenticationStyles.rightLine} />
-        </View>
-
-        <View style={authenticationStyles.socialIconsContainer}>
-          <Pressable style={authenticationStyles.socialIcon}>
-            <Image
-              source={require("../../../assets/logos/google-icon.webp")}
-              style={authenticationStyles.googleImage}
-            />
-            <Text style={authenticationStyles.socialText}>
-              Sign Up with Google{" "}
-            </Text>
-          </Pressable>
-        </View>
       </View>
 
       <Pressable onPress={() => navigation.navigate("Login")}>
@@ -152,4 +167,26 @@ export default function SignUp() {
       </Pressable>
     </Pressable>
   );
+}
+
+{
+  /* <View style={authenticationStyles.orContainer}>
+          <View style={authenticationStyles.leftLine} />
+          <Text style={authenticationStyles.orText}>or</Text>
+          <View style={authenticationStyles.rightLine} />
+        </View> */
+}
+
+{
+  /* <View style={authenticationStyles.socialIconsContainer}>
+          <Pressable style={authenticationStyles.socialIcon}>
+            <Image
+              source={require("../../../assets/logos/google-icon.webp")}
+              style={authenticationStyles.googleImage}
+            />
+            <Text style={authenticationStyles.socialText}>
+              Sign Up with Google{" "}
+            </Text>
+          </Pressable>
+        </View> */
 }

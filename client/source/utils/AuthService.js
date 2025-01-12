@@ -1,6 +1,8 @@
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import { decode as atob } from "base-64";
+import { signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "./firebaseConfig";
 
 global.atob = atob;
 
@@ -70,6 +72,33 @@ class AuthService {
     } catch (error) {
       console.error("Error checking registration completion", error);
       return false;
+    }
+  }
+
+  // Send the phone verification code
+  async sendVerificationCode(phoneNumber) {
+    try {
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber);
+      console.log("Verification code sent!");
+      return confirmationResult; // Return confirmation result for later verification
+    } catch (error) {
+      console.error("Error sending verification code:", error);
+      throw error;
+    }
+  }
+
+  // Confirm the verification code and sign in the user
+  async confirmVerificationCode(confirmationResult, code) {
+    try {
+      const result = await confirmationResult.confirm(code);
+      console.log("Phone number verified!");
+      // Save the user's authentication token after verification
+      const token = await result.user.getIdToken();
+      await this.saveToken(token);
+      return result.user;
+    } catch (error) {
+      console.error("Error confirming verification code:", error);
+      throw error;
     }
   }
 }

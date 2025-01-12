@@ -14,13 +14,13 @@ import authenticationStyles from "../../styles/screens/authenticationStyles";
 import { useCreateProfileContext } from "../../contexts/CreateProfileContext";
 import { VALIDATE_PHONE_NUMBER } from "../../utils/mutations/userAuthenticationMutations";
 import { useMutation } from "@apollo/client";
-
 import AuthenticationButton from "../../buttons/AuthenticationButton";
 
 export default function SignUp() {
-  const { profile, updateProfile, resetProfile } = useCreateProfileContext();
+  const { resetProfile } = useCreateProfileContext();
   const [isValid, setIsValid] = useState(false);
   const [formattedPhoneNumber, setFormattedPhoneNumber] = useState("");
+  const [loadingOtp, setLoadingOtp] = useState(false);
   const navigation = useNavigation();
 
   // Mutation to validate phone number
@@ -60,31 +60,35 @@ export default function SignUp() {
     validateInputs();
   }, [formattedPhoneNumber]);
 
+  // Handle sending OTP
   const handleNextStep = async () => {
     try {
       const cleanedPhoneNumber = formattedPhoneNumber.replace(/\D/g, "");
 
-      updateProfile("phoneNumber", cleanedPhoneNumber);
-
+      // Validate if the phone number is already taken
       const variables = {
         phoneNumber: cleanedPhoneNumber,
       };
 
       const { data } = await validatePhoneNumber({ variables });
 
-      if (data.validatePhoneNumber.success) {
-        navigation.navigate("VerifyAccount");
-      } else {
-        Alert.alert("Validation Error", data.validatePhoneNumber.message);
-      }
+      // Send OTP via Firebase Auth
+      setLoadingOtp(true);
+      const phoneNumberWithCountryCode = `+1${cleanedPhoneNumber}`;
+
+      // Navigate to VerifyAccount screen with confirmation result
+      navigation.navigate("VerifyAccount", {});
+
+      Alert.alert("Success", "OTP sent!");
     } catch (error) {
-      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+      Alert.alert("Error", "Something went wrong. Please try again.");
       console.error(error);
+    } finally {
+      setLoadingOtp(false);
     }
   };
 
   return (
-    // Wrapping the entire screen in a Pressable to dismiss the keyboard
     <Pressable style={authenticationStyles.wrapper} onPress={Keyboard.dismiss}>
       <View style={authenticationStyles.container}>
         <View style={authenticationStyles.logoContainer}>
@@ -95,13 +99,13 @@ export default function SignUp() {
         </View>
         <Text style={authenticationStyles.title}>Sign Up for Lifelist</Text>
         <Text style={authenticationStyles.mainSubtitle}>
-          Please choose your preferred sign-up method.
+          Please enter your phone number to receive a verification code.
         </Text>
 
         {/* Phone Number Input */}
         <View style={authenticationStyles.inputWrapper}>
           <View style={formStyles.inputHeader}>
-            <Text style={formStyles.label}>{"Phone Number"}</Text>
+            <Text style={formStyles.label}>Phone Number</Text>
           </View>
           <TextInput
             style={formStyles.input}
@@ -119,27 +123,9 @@ export default function SignUp() {
           borderColor={isValid ? "#6AB95250" : "#1c1c1c"}
           textColor={isValid ? "#6AB952" : "#696969"}
           width="85%"
-          text={loading ? "Loading..." : "Create Account"}
-          onPress={isValid && !loading ? handleNextStep : null}
+          text={loadingOtp ? "Sending..." : "Create Account"}
+          onPress={isValid && !loadingOtp ? handleNextStep : null}
         />
-
-        <View style={authenticationStyles.orContainer}>
-          <View style={authenticationStyles.leftLine} />
-          <Text style={authenticationStyles.orText}>or</Text>
-          <View style={authenticationStyles.rightLine} />
-        </View>
-
-        <View style={authenticationStyles.socialIconsContainer}>
-          <Pressable style={authenticationStyles.socialIcon}>
-            <Image
-              source={require("../../../assets/logos/google-icon.webp")}
-              style={authenticationStyles.googleImage}
-            />
-            <Text style={authenticationStyles.socialText}>
-              Sign Up with Google{" "}
-            </Text>
-          </Pressable>
-        </View>
       </View>
 
       <Pressable onPress={() => navigation.navigate("Login")}>
