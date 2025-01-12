@@ -15,6 +15,7 @@ export const CreateProfileProvider = ({ children }) => {
     phoneNumber: "",
     email: "",
     birthday: "",
+    accessCode: "",
   });
 
   // Update profile fields
@@ -34,6 +35,7 @@ export const CreateProfileProvider = ({ children }) => {
       phoneNumber: "",
       email: "",
       birthday: "",
+      accessCode: "",
     });
   };
 

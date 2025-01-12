@@ -3,6 +3,7 @@ import { setContext } from "@apollo/client/link/context";
 import { HttpLink } from "@apollo/client";
 import * as SecureStore from "expo-secure-store";
 
+// THIS IS THE API GATEWAY
 const graphqlUri =
   "https://ggu5enboke.execute-api.us-east-2.amazonaws.com/graphql";
 

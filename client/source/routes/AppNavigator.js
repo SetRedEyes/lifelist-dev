@@ -3,6 +3,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../contexts/AuthContext";
+import { useLazyQuery } from "@apollo/client";
+import { CHECK_ONBOARDING_STATUS } from "../utils/queries/onboardingQueries";
 
 // Main Navigation Flows
 import TabNavigator from "./TabNavigator";
@@ -28,6 +30,7 @@ export default function AppNavigator() {
   const [isEarlyAccessUnlocked, setIsEarlyAccessUnlocked] = useState(null);
   const [isLoadingOnboardingStatus, setIsLoadingOnboardingStatus] =
     useState(true);
+
   const {
     isAuthenticated,
     isOnboardingComplete,
@@ -35,7 +38,25 @@ export default function AppNavigator() {
     setIsOnboardingComplete,
   } = useAuth();
 
-  console.log("Onboarding Complete:", isOnboardingComplete);
+  const [checkOnboardingStatus] = useLazyQuery(CHECK_ONBOARDING_STATUS, {
+    onCompleted: async (data) => {
+      if (data && data.checkOnboardingStatus) {
+        // Save to AsyncStorage and update state
+        await AsyncStorage.setItem(
+          `isOnboardingComplete_${currentUser}`,
+          "true"
+        );
+        setIsOnboardingComplete(true);
+      } else {
+        setIsOnboardingComplete(false);
+      }
+      setIsLoadingOnboardingStatus(false);
+    },
+    onError: (error) => {
+      console.error("Error checking onboarding status:", error);
+      setIsLoadingOnboardingStatus(false);
+    },
+  });
 
   // Check Early Access from AsyncStorage
   useEffect(() => {
@@ -55,18 +76,14 @@ export default function AppNavigator() {
     checkInitialStatus();
   }, [isAuthenticated]);
 
-  // Automatically check onboarding status when currentUser changes
+  /*   // Automatically check onboarding status when currentUser changes
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       if (currentUser) {
         try {
-          console.log("currentUser", currentUser);
-
           const onboardingStatus = await AsyncStorage.getItem(
             `isOnboardingComplete_${currentUser}`
           );
-
-          console.log("Retrieved Onboarding Status:", onboardingStatus);
 
           if (!onboardingStatus) {
             setIsOnboardingComplete(onboardingStatus === "false");
@@ -84,6 +101,35 @@ export default function AppNavigator() {
     };
 
     checkOnboardingStatus();
+  }, [currentUser]); */
+
+  useEffect(() => {
+    const checkOnboardingStatusAsync = async () => {
+      if (currentUser) {
+        try {
+          // Check AsyncStorage for saved onboarding status
+          const onboardingStatus = await AsyncStorage.getItem(
+            `isOnboardingComplete_${currentUser}`
+          );
+
+          if (onboardingStatus !== null) {
+            // We found a saved status in AsyncStorage (either "true" or "false")
+            setIsOnboardingComplete(onboardingStatus === "true");
+            setIsLoadingOnboardingStatus(false);
+          } else {
+            // No status found — query the server
+            checkOnboardingStatus();
+          }
+        } catch (error) {
+          console.error("Error checking onboarding status:", error);
+          setIsLoadingOnboardingStatus(false);
+        }
+      } else {
+        setIsLoadingOnboardingStatus(false);
+      }
+    };
+
+    checkOnboardingStatusAsync();
   }, [currentUser]);
 
   // Show loading screen while checking

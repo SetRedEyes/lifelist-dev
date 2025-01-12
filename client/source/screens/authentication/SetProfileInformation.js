@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Text,
   View,
@@ -47,6 +47,7 @@ export default function SetProfileInformation() {
   const [isValid, setIsValid] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const navigation = useNavigation();
+  const lastFocusedInputRef = useRef(null);
 
   // Validate form whenever profile data changes
   useEffect(() => {
@@ -81,8 +82,15 @@ export default function SetProfileInformation() {
   }, [navigation, isValid]);
 
   // Date Picker visibility handlers
-  const showDatePicker = () => setDatePickerVisibility(true);
-  const hideDatePicker = () => setDatePickerVisibility(false);
+  const showDatePicker = () => {
+    Keyboard.dismiss(); // Dismiss the keyboard before showing the date picker
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+    lastFocusedInputRef.current?.blur(); // Ensure no input refocuses
+  };
 
   // Handle date selection with age validation
   const handleConfirm = (date) => {
@@ -174,6 +182,9 @@ export default function SetProfileInformation() {
               placeholder="Enter your full name"
               placeholderTextColor="#c7c7c7"
               onChangeText={(value) => updateProfile("fullName", value)}
+              onFocus={() => (lastFocusedInputRef.current = null)}
+              autoComplete="off"
+              textContentType="none"
             />
           </View>
 
@@ -186,13 +197,20 @@ export default function SetProfileInformation() {
               placeholder="Write a short bio"
               placeholderTextColor="#c7c7c7"
               onChangeText={(value) => updateProfile("bio", value)}
+              onFocus={() => (lastFocusedInputRef.current = null)}
+              autoComplete="off"
+              textContentType="none"
             />
           </View>
 
           {/* Birthday Input */}
           <View style={authenticationStyles.inputWrapper}>
             <Text style={formStyles.label}>Birthday</Text>
-            <Pressable style={formStyles.input} onPress={showDatePicker}>
+            <Pressable
+              style={formStyles.input}
+              onPress={showDatePicker}
+              onFocus={() => (lastFocusedInputRef.current = null)}
+            >
               <View style={{ padding: 0 }}>
                 <Text
                   style={

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, Pressable, Alert, StyleSheet } from "react-native";
-import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import { useCameraPermissions } from "expo-camera";
 import AuthenticationButton from "../../buttons/AuthenticationButton";
@@ -18,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function SetPermissions() {
   const navigation = useNavigation();
   const { login } = useAuth();
-  const { profile } = useCreateProfileContext();
+  const { profile, updateProfile } = useCreateProfileContext();
   const [createProfile] = useMutation(CREATE_PROFILE);
   const [getPresignedUrl] = useLazyQuery(GET_PRESIGNED_URL);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -88,9 +87,15 @@ export default function SetPermissions() {
       return;
     }
 
-    let profilePictureUrl = null;
-
     try {
+      // Fetch access code from AsyncStorage
+      const accessCode = await AsyncStorage.getItem("earlyAccessCode");
+      console.log("accessCode:", accessCode);
+
+      // Ensure profile has the access code
+      updateProfile("accessCode", accessCode);
+
+      let profilePictureUrl = null;
       if (profile.profilePicture) {
         const fileName = profile.profilePicture.split("/").pop();
 
@@ -126,6 +131,7 @@ export default function SetPermissions() {
           input: {
             ...profile,
             profilePicture: profilePictureUrl,
+            accessCode,
           },
         },
       });

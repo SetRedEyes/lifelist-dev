@@ -13,7 +13,7 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "bundleIdentifier": "com.lifelist",
+      "bundleIdentifier": "com.joinlifelist.app",
       "buildNumber": "1.0.1",
       "supportsTablet": true,
       "infoPlist": {

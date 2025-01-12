@@ -43,6 +43,7 @@
     "expo-sms": "~13.0.0",
     "expo-symbols": "^0.2.0",
     "expo-updates": "^0.26.11",
+    "firebase": "^11.1.0",
     "gl-react": "^4.1.0",
     "gl-react-expo": "^5.2.1",
     "graphql": "^16.10.0",

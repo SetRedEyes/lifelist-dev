@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AuthService from "../utils/AuthService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useMutation } from "@apollo/client";
+import { COMPLETE_ONBOARDING } from "../utils/mutations/onboardingMutations";
 
 // Create AuthContext
 const AuthContext = createContext({});
@@ -11,6 +13,9 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
 
+  // Apollo Mutation for completing onboarding
+  const [completeOnboardingMutation] = useMutation(COMPLETE_ONBOARDING);
+
   // Check initial authentication and onboarding status
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -20,7 +25,6 @@ export const AuthProvider = ({ children }) => {
       if (isLoggedIn) {
         const userData = await AuthService.getUser();
         setCurrentUser(userData);
-        console.log("USER DATA", userData);
 
         // Check if onboarding is complete for this user
         const onboardingStatus = await AsyncStorage.getItem(
@@ -100,18 +104,15 @@ export const AuthProvider = ({ children }) => {
   const completeOnboarding = async () => {
     if (currentUser) {
       try {
+        // Run the COMPLETE_ONBOARDING mutation
+        await completeOnboardingMutation();
+
         // Set the onboarding complete status
         await AsyncStorage.setItem(
           `isOnboardingComplete_${currentUser}`,
           "true"
         );
         setIsOnboardingComplete(true);
-
-        // Retrieve and log the value from AsyncStorage
-        const storedValue = await AsyncStorage.getItem(
-          `isOnboardingComplete_${currentUser}`
-        );
-        console.log("AsyncStorage Value:", storedValue); // Should log "true"
       } catch (error) {
         console.error("Error setting onboarding complete status:", error);
       }

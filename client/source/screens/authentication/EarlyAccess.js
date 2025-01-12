@@ -34,16 +34,29 @@ export default function EarlyAccess() {
     onCompleted: async (data) => {
       if (data.verifyAccessCode.success) {
         try {
-          // Store the access code in AsyncStorage
+          // ✅ Store the access code in AsyncStorage
           await AsyncStorage.setItem("earlyAccessCode", inputValue);
-
-          // Mark the access state as unlocked
           await AsyncStorage.setItem("isEarlyAccessUnlocked", "true");
+
+          // ✅ Log the stored values from AsyncStorage to verify
+          const storedCode = await AsyncStorage.getItem("earlyAccessCode");
+          const isUnlocked = await AsyncStorage.getItem(
+            "isEarlyAccessUnlocked"
+          );
+
+          console.log("Stored Early Access Code:", storedCode);
+          console.log("Is Early Access Unlocked:", isUnlocked);
+
+          // ✅ Trigger animation and navigate to the SignUp screen
+          setAccessGranted(true);
+          runAnimation(() => {
+            navigation.navigate("SignUp");
+          });
         } catch (error) {
           console.error("AsyncStorage error:", error);
         }
       } else {
-        Alert.alert("Error", data.verifyAccessCode.message);
+        Alert.alert("Access Denied", data.verifyAccessCode.message);
       }
     },
     onError: (error) => {
@@ -96,35 +109,14 @@ export default function EarlyAccess() {
     }
 
     if (!isAnimating && !loading) {
-      try {
-        const { data } = await verifyAccessCode({
-          variables: { code: inputValue },
-        });
-        if (data.verifyAccessCode.success) {
-          // Set accessGranted to true to trigger animation
-          setAccessGranted(true);
-
-          // Save to AsyncStorage
-          await AsyncStorage.setItem("earlyAccessCode", inputValue);
-
-          // Run animations and navigate
-          runAnimation(() => {
-            navigation.navigate("SignUp");
-          });
-        } else {
-          Alert.alert("Access Denied", data.verifyAccessCode.message);
-        }
-      } catch (error) {
-        console.error("Verify Access Code Error:", error.message);
-        Alert.alert("Error", "Failed to verify access code. Please try again.");
-      }
+      // ✅ Trigger the verifyAccessCode mutation
+      verifyAccessCode({ variables: { code: inputValue } });
     }
   };
 
   return (
     <Pressable style={layoutStyles.wrapper} onPress={() => Keyboard.dismiss()}>
       <View style={styles.container}>
-        {/* Use a ternary operator to hide/show content */}
         {!accessGranted ? (
           <>
             <Image
@@ -136,10 +128,8 @@ export default function EarlyAccess() {
               style={styles.input}
               value={inputValue}
               onChangeText={handleInputChange}
-              autoCapitalize="characters" // Automatically capitalize input
+              autoCapitalize="characters"
             />
-
-            {/* Lock Icon */}
             <LockIcon
               color={inputValue ? "#6AB952" : "#252525"}
               backgroundColor={inputValue ? "#6AB95230" : "transparent"}
@@ -149,20 +139,17 @@ export default function EarlyAccess() {
           </>
         ) : (
           <>
-            {/* Animated "Access Granted" Text */}
             <Animated.Text
               style={[
                 styles.accessGrantedText,
                 {
-                  opacity: opacityValue, // Fade in effect
-                  transform: [{ translateY: slideUpValue }], // Slide up effect
+                  opacity: opacityValue,
+                  transform: [{ translateY: slideUpValue }],
                 },
               ]}
             >
               Access Granted
             </Animated.Text>
-
-            {/* Stack Welcome to and LifeList Image vertically */}
             <Animated.View
               style={[styles.welcomeContainer, { opacity: welcomeOpacity }]}
             >

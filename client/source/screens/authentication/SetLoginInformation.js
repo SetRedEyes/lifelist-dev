@@ -134,6 +134,7 @@ export default function SetLoginInformation() {
               onChangeText={(value) => updateProfile("username", value)}
               autoComplete="off"
               autoCapitalize="none"
+              textContentType="none"
             />
           </View>
 
@@ -149,6 +150,7 @@ export default function SetLoginInformation() {
               onChangeText={(value) => updateProfile("password", value)}
               autoComplete="off"
               autoCapitalize="none"
+              textContentType="none"
             />
           </View>
 
@@ -164,6 +166,7 @@ export default function SetLoginInformation() {
               onChangeText={(value) => setConfirmPassword(value)}
               autoComplete="off"
               autoCapitalize="none"
+              textContentType="none"
             />
           </View>
 

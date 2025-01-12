@@ -15,6 +15,7 @@ export const CREATE_PROFILE = gql`
         profilePicture
         birthday
         gender
+        accessCode
       }
     }
   }
