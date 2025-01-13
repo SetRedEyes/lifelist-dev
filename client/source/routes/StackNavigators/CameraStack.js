@@ -13,6 +13,7 @@ import ButtonIcon from "../../icons/ButtonIcon";
 import { symbolStyles } from "../../styles/components/symbolStyles";
 import CameraHeader from "../../screens/camera/components/CameraHeader";
 import CreateAlbum from "../../screens/camera/albums/CreateAlbum";
+import DevelopingDisplay from "../../displays/DevelopingDisplay";
 
 const Stack = createStackNavigator();
 
@@ -56,7 +57,22 @@ export default function CameraStack() {
       <Stack.Screen
         name="CameraRoll"
         component={CameraRoll}
-        options={{ headerShown: true, title: "Camera Roll" }}
+        options={{
+          headerShown: true,
+          title: "Camera Roll",
+          cardStyleInterpolator: ({ current, layouts }) => ({
+            cardStyle: {
+              transform: [
+                {
+                  translateX: current.progress.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-layouts.screen.width, 0], // Slide in from left
+                  }),
+                },
+              ],
+            },
+          }),
+        }}
       />
       <Stack.Screen
         name="DevelopingRoll"
@@ -81,6 +97,25 @@ export default function CameraStack() {
             </View>
           ),
         })}
+      />
+      <Stack.Screen
+        name="DevelopingDisplay"
+        component={DevelopingDisplay}
+        options={{
+          headerShown: true,
+          title: "",
+          headerTitleStyle: {
+            color: "#fff",
+          },
+          headerStyle: {
+            backgroundColor: "#121212",
+          },
+          cardStyleInterpolator: ({ current }) => ({
+            cardStyle: {
+              opacity: current.progress,
+            },
+          }),
+        }}
       />
       {/* Albums Screens */}
       <Stack.Screen

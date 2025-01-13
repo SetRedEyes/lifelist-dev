@@ -30,21 +30,16 @@ export default function EditOverview() {
 
   const handleNextPage = () => {
     navigation.navigate("EditPreview", {
-      currentIndex: params?.currentIndex, // Pass currentIndex
-      returnTo: params?.returnTo,
+      collageId: params?.collageId,
     });
   };
 
   const handleAddParticipants = () => {
-    navigation.navigate("EditTaggedUsers", {
-      returnTo: params?.returnTo || "MainFeed",
-    });
+    navigation.navigate("EditTaggedUsers");
   };
 
   const handleChangeCoverImage = () => {
-    navigation.navigate("EditCoverImage", {
-      returnTo: params?.returnTo || "MainFeed",
-    });
+    navigation.navigate("EditCoverImage");
   };
 
   // Set header options

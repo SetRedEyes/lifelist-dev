@@ -102,6 +102,7 @@ export default function AddExperiencesSearch({ navigation }) {
     setSearchQuery,
     navigateToOverview,
     handleBackNavigation,
+    lifeListExperiences,
   ]);
 
   useEffect(() => {

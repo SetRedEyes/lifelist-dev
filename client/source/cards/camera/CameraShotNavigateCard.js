@@ -11,9 +11,10 @@ const shotHeight = (shotWidth * 3) / 2;
 export default function CameraShotNavigateCard({
   shot,
   navigation,
-  fromAlbum,
+  cameraRoll,
   albumShots,
-  fromExperience,
+  fromAlbum = false,
+  fromExperience = false,
   experienceShots,
   experienceId,
   experienceList,
@@ -30,12 +31,21 @@ export default function CameraShotNavigateCard({
             experienceId,
             experienceList,
           });
-        } else {
-          // Navigate directly to ViewShot for other cases
+        }
+        if (fromAlbum) {
+          // Navigate to ViewShot
           navigation.navigate("ViewShot", {
             shotId: shot._id,
-            fromAlbum,
             albumShots,
+            initialIndex: albumShots.findIndex((s) => s._id === shot._id),
+            fromAlbum,
+          });
+        } else {
+          navigation.navigate("ViewShot", {
+            shotId: shot._id,
+            cameraRoll,
+            initialIndex: cameraRoll.findIndex((s) => s._id === shot._id),
+            fromAlbum,
           });
         }
       }}

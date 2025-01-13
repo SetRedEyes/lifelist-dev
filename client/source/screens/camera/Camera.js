@@ -22,6 +22,7 @@ import {
 } from "../../utils/caching/cacheHelpers";
 import * as ImageManipulator from "expo-image-manipulator";
 import { layoutStyles } from "../../styles/components/index";
+import { BlurView } from "expo-blur";
 
 const screenWidth = Dimensions.get("window").width;
 const cameraHeight = (screenWidth * 3) / 2;
@@ -33,6 +34,7 @@ export default function Camera({ navigation }) {
   const [cameraType, setCameraType] = useState("Standard");
   const [facing, setFacing] = useState("back");
   const [flash, setFlash] = useState("off");
+  const [isProcessing, setIsProcessing] = useState(false);
   const cameraRef = useRef(null);
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
@@ -96,7 +98,13 @@ export default function Camera({ navigation }) {
         </View>
       ),
     });
-  }, [navigation, cameraType, showCameraOptions, handleShowCameraOptions]);
+  }, [
+    navigation,
+    cameraType,
+    showCameraOptions,
+    handleShowCameraOptions,
+    shotsLeft,
+  ]);
 
   useEffect(() => {
     // Animate the rotation based on the popup visibility
@@ -165,7 +173,7 @@ export default function Camera({ navigation }) {
   useEffect(() => {
     const loadCacheAndCalculateShots = async () => {
       if (!isDevelopingRollCacheInitialized) {
-        await initializeDevelopingRollCache();
+        await initializeDevelopingRoll();
       }
       const todayShots = calculateTodayShots();
 
@@ -211,8 +219,11 @@ export default function Camera({ navigation }) {
 
     // Initialize cache if not already done
     if (!isDevelopingRollCacheInitialized) {
-      await initializeDevelopingRollCache();
+      await initializeDevelopingRoll();
     }
+
+    // Disable the button and blur the camera
+    setIsProcessing(true);
 
     if (cameraRef.current) {
       try {
@@ -223,13 +234,25 @@ export default function Camera({ navigation }) {
 
         // Upload the resized image and thumbnail
         const newShot = await uploadShot(resizedUri, thumbnailUri);
-        addShot(newShot);
+
+        addShot({
+          _id: newShot._id,
+          image: newShot.image,
+          imageThumbnail: newShot.imageThumbnail,
+          developingTime: newShot.developingTime,
+          isDeveloped: newShot.isDeveloped,
+          readyToReviewAt: newShot.readyToReviewAt,
+          transferredToRoll: newShot.transferredToRoll,
+        });
 
         const newShotsLeft = shotsLeft - 1;
         setShotsLeft(newShotsLeft);
         saveMetadataToCache("shotsLeft", newShotsLeft, true); // Persistent cache
       } catch (error) {
         console.error("Error taking photo:", error);
+      } finally {
+        // Re-enable the button and remove blur after processing
+        setIsProcessing(false);
       }
     }
   };
@@ -304,12 +327,14 @@ export default function Camera({ navigation }) {
         ref={cameraRef}
         style={{ height: cameraHeight, width: screenWidth }}
         facing={facing}
+        flash={flash}
       />
       <CameraFooter
         handleTakePhoto={handleTakePhoto}
         flash={flash}
         toggleFlash={toggleFlash}
         toggleFacing={toggleFacing}
+        isProcessing={isProcessing}
       />
       <CameraOptions
         visible={showCameraOptions}

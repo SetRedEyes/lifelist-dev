@@ -25,7 +25,7 @@ const imageHeight = width * aspectRatio;
 export default function ViewShot() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { shotId, albumShots } = route.params;
+  const { shotId, albumShots, initialIndex = 0 } = route.params;
 
   const {
     shots,
@@ -39,17 +39,14 @@ export default function ViewShot() {
   const { addMoment } = useAdminProfile();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentShot, setCurrentShot] = useState(null);
+  const [currentShot, setCurrentShot] = useState(
+    shotsFeed[initialIndex] || null
+  );
   const [isPostingToMoment, setIsPostingToMoment] = useState(false);
   const [isAdditionalOptionsVisible, setIsAdditionalOptionsVisible] =
     useState(false);
   const [isDeleteAlertVisible, setIsDeleteAlertVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
-
-  useEffect(() => {
-    const initialIndex = shots.findIndex((shot) => shot._id === shotId);
-    setCurrentIndex(initialIndex);
-  }, [shotId, shots]);
 
   const handleViewableItemsChanged = useCallback(
     async ({ viewableItems }) => {
@@ -71,7 +68,10 @@ export default function ViewShot() {
 
   const handleDeletePress = () => setIsDeleteAlertVisible(true);
 
+  console.log(currentShot._id);
+
   const confirmDelete = async () => {
+    console.log(currentShot._id);
     try {
       const shotId = currentShot?._id;
       if (shotId) {
@@ -118,10 +118,31 @@ export default function ViewShot() {
 
   const handleSharePress = async () => {
     if (!currentShot?.image) return;
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(currentShot.image);
-    } else {
-      alert("Sharing is not available on this device.");
+
+    try {
+      let imageUri = currentShot.image;
+
+      // If the image is a remote URL, download it to a local file
+      if (imageUri.startsWith("http")) {
+        const fileName = imageUri.split("/").pop();
+        const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+        const { uri } = await FileSystem.downloadAsync(imageUri, fileUri);
+        imageUri = uri;
+      }
+
+      // Share the local image file
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(imageUri, {
+          mimeType: "image/jpeg",
+          dialogTitle: "Share Camera Shot",
+          UTI: "public.jpeg",
+        });
+      } else {
+        alert("Sharing is not available on this device.");
+      }
+    } catch (error) {
+      console.error("Error sharing image:", error);
+      alert("Failed to share image.");
     }
   };
 
@@ -220,11 +241,11 @@ export default function ViewShot() {
           keyExtractor={(item) => item._id}
           horizontal
           pagingEnabled
+          initialScrollIndex={initialIndex}
           initialNumToRender={3}
           maxToRenderPerBatch={5}
           onViewableItemsChanged={handleViewableItemsChanged}
           showsHorizontalScrollIndicator={false}
-          initialScrollIndex={currentIndex}
           getItemLayout={(data, index) => ({
             length: width,
             offset: width * index,

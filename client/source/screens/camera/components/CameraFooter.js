@@ -13,6 +13,7 @@ export default function CameraFooter({
   flash,
   toggleFlash,
   toggleFacing,
+  isProcessing,
 }) {
   const navigation = useNavigation();
 
@@ -50,7 +51,7 @@ export default function CameraFooter({
           />
         </Pressable>
         <View style={styles.circleContainer}>
-          <Pressable onPress={handleTakePhoto}>
+          <Pressable onPress={handleTakePhoto} disabled={isProcessing}>
             <LinearGradient
               colors={["#6AB952", "#5FC4ED"]}
               style={styles.circleOutline}

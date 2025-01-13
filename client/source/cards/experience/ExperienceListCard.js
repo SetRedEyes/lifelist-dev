@@ -207,6 +207,7 @@ export default function ExperienceListCard({
         onRequestClose={() => setIsAlertVisible(false)}
         message="Are you sure you want to change the list? Your associated shots will be cleared."
         onConfirm={confirmChangeListStatus}
+        confirmButtonText="Change"
       />
     </View>
   );

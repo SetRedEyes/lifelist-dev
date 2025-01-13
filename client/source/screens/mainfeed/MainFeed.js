@@ -20,7 +20,6 @@ import { symbolStyles } from "../../styles/components/symbolStyles";
 import { Image } from "expo-image";
 import { headerStyles } from "../../styles/components/headerStyles";
 import { layoutStyles } from "../../styles/components";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -146,9 +145,9 @@ export default function MainFeed({ route }) {
   );
 
   const renderCollage = useCallback(
-    ({ item }) => (
+    ({ item, index }) => (
       <View style={{ height: collageHeight }}>
-        <CollageDisplay collageId={item._id} />
+        <CollageDisplay collageId={item._id} index={index} />
       </View>
     ),
     [collageHeight]

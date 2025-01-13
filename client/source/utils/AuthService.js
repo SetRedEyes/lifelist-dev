@@ -75,30 +75,30 @@ class AuthService {
     }
   }
 
-  // Send the phone verification code
-  async sendVerificationCode(phoneNumber) {
+  // Send phone verification code
+  async sendVerificationCode(phoneNumber, recaptchaVerifier) {
     try {
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber);
-      console.log("Verification code sent!");
-      return confirmationResult; // Return confirmation result for later verification
+      // Pass the reCAPTCHA verifier to `signInWithPhoneNumber`
+      const confirmationResult = await signInWithPhoneNumber(
+        auth,
+        phoneNumber,
+        recaptchaVerifier
+      );
+      return confirmationResult;
     } catch (error) {
       console.error("Error sending verification code:", error);
-      throw error;
+      throw new Error(error.message);
     }
   }
 
-  // Confirm the verification code and sign in the user
-  async confirmVerificationCode(confirmationResult, code) {
+  // Confirm the verification code
+  async confirmVerificationCode(confirmationResult, verificationCode) {
     try {
-      const result = await confirmationResult.confirm(code);
-      console.log("Phone number verified!");
-      // Save the user's authentication token after verification
-      const token = await result.user.getIdToken();
-      await this.saveToken(token);
-      return result.user;
+      await confirmationResult.confirm(verificationCode);
+      console.log("Phone number verified successfully!");
     } catch (error) {
       console.error("Error confirming verification code:", error);
-      throw error;
+      throw new Error(error.message);
     }
   }
 }

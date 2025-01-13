@@ -60,22 +60,6 @@ export default function SignUp() {
     validateInputs();
   }, [formattedPhoneNumber]);
 
-  // Setup Recaptcha for OTP
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        {
-          size: "invisible",
-          callback: (response) => {
-            console.log("Recaptcha verified");
-          },
-        },
-        auth
-      );
-    }
-  };
-
   // Handle Send OTP with backend validation
   const handleSendOtp = async () => {
     if (!isValid) {

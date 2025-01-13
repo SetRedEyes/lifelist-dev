@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import { useLazyQuery, useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import {
   GET_ALL_CAMERA_SHOTS,
   GET_CAMERA_SHOT,
@@ -12,6 +12,7 @@ import {
   deleteImageFromFileSystem,
 } from "../utils/caching/cacheHelpers";
 import LRUCache from "../utils/caching/lruCacheHelper";
+import { DELETE_CAMERA_SHOT } from "../utils/mutations/cameraMutations";
 
 const CameraRollContext = createContext();
 
@@ -41,7 +42,11 @@ export const CameraRollProvider = ({ children }) => {
     try {
       const cachedData = await getMetadataFromCache(CACHE_KEY_METADATA);
       if (cachedData) {
-        setShots(cachedData.shots);
+        // Sort cached shots by capturedAt in descending order (newest first)
+        const sortedShots = cachedData.shots.sort(
+          (a, b) => new Date(b.capturedAt) - new Date(a.capturedAt)
+        );
+        setShots(sortedShots);
         setNextCursor(cachedData.nextCursor);
         setHasNextPage(cachedData.hasNextPage);
       } else {
@@ -65,12 +70,16 @@ export const CameraRollProvider = ({ children }) => {
         const newCursor = data.getAllCameraShots.nextCursor;
         const newHasNextPage = data.getAllCameraShots.hasNextPage;
 
-        const mergedShots = [...shots, ...newShots];
+        // Merge new shots with existing ones and sort by capturedAt (newest first)
+        const mergedShots = [...shots, ...newShots].sort(
+          (a, b) => new Date(b.capturedAt) - new Date(a.capturedAt)
+        );
+
         setShots(mergedShots);
         setNextCursor(newCursor);
         setHasNextPage(newHasNextPage);
 
-        // Save updated metadata and thumbnails
+        // Save updated metadata
         await saveMetadataToCache(CACHE_KEY_METADATA, {
           shots: mergedShots,
           nextCursor: newCursor,
@@ -146,6 +155,10 @@ export const CameraRollProvider = ({ children }) => {
   // === Add Shot to Camera Roll ===
   const addShotToRoll = async (newShot) => {
     try {
+      // Prevent duplicate shots
+      const shotExists = shots.some((shot) => shot._id === newShot._id);
+      if (shotExists) return;
+
       const updatedShots = [newShot, ...shots];
       setShots(updatedShots);
 
@@ -170,22 +183,45 @@ export const CameraRollProvider = ({ children }) => {
     }
   };
 
+  const [deleteCameraShot] = useMutation(DELETE_CAMERA_SHOT);
+
   // === Remove Shot from Camera Roll ===
   const removeShotFromRoll = async (shotId) => {
     try {
+      // Optimistically update local state and cache
       const updatedShots = shots.filter((shot) => shot._id !== shotId);
       setShots(updatedShots);
 
+      // Save updated shots to cache
       await saveMetadataToCache(CACHE_KEY_METADATA, {
         shots: updatedShots,
         nextCursor,
         hasNextPage,
       });
 
+      // Delete thumbnail from file system
       const thumbnailKey = `thumbnail_${shotId}`;
       await deleteImageFromFileSystem(thumbnailKey);
+
+      // === Perform backend deletion ===
+      const { data } = await deleteCameraShot({ variables: { shotId } });
+
+      // Handle mutation result
+      if (data?.deleteCameraShot?.success) {
+        console.log(`Shot ${shotId} successfully deleted from server.`);
+      } else {
+        console.error(
+          `Failed to delete shot ${shotId}: ${data?.deleteCameraShot?.message}`
+        );
+      }
     } catch (error) {
       console.error(`[CameraRoll] Error removing shot ${shotId}:`, error);
+
+      // Optional: Revert local state in case of error
+      setShots((prevShots) => [
+        ...prevShots,
+        shots.find((s) => s._id === shotId),
+      ]);
     }
   };
 

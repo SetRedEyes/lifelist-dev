@@ -74,8 +74,9 @@ export default function CreateAlbum() {
 
       const newAlbumId = await addAlbumToCache(newAlbumData);
 
+      // Navigate to ViewAlbum without keeping CreateAlbum in the stack
       if (newAlbumId) {
-        navigation.navigate("ViewAlbum", {
+        navigation.replace("ViewAlbum", {
           albumId: newAlbumId,
           fromScreen: "CreateAlbum",
         });

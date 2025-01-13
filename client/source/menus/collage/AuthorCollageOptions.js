@@ -22,6 +22,7 @@ export default function AuthorCollageOptions({
   isArchived: initialIsArchived,
   isViewCollageScreen = false,
   currentIndex,
+  collages,
 }) {
   const navigation = useNavigation();
   const { addCollage, removeCollage } = useAdminProfile();
@@ -96,7 +97,6 @@ export default function AuthorCollageOptions({
     >
       <View style={menuStyles.popupContainer}>
         <Text style={menuStyles.header}>Options</Text>
-
         {/* Edit */}
         <Pressable
           style={[menuStyles.cardContainer, menuStyles.flex]}
@@ -105,9 +105,8 @@ export default function AuthorCollageOptions({
             navigation.navigate("EditMedia", {
               collageId,
               collageData,
+              collages,
               currentIndex,
-              returnTo:
-                navigation.getState().routes[navigation.getState().index]?.name,
             });
           }}
         >

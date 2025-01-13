@@ -6,14 +6,13 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import CameraShotBlurredCard from "../../cards/camera/CameraShotBlurredCard";
 import { useDevelopingRoll } from "../../contexts/DevelopingRollContext";
 import { containerStyles, layoutStyles } from "../../styles/components";
-import { BlurView } from "expo-blur";
-import DevelopingDisplay from "../../displays/DevelopingDisplay";
 
 export default function DevelopingRoll() {
+  const navigation = useNavigation();
   const [selectedShot, setSelectedShot] = useState(null);
 
   const {
@@ -38,16 +37,14 @@ export default function DevelopingRoll() {
     }, [recalculateDevelopedStatus])
   );
 
+  // Handle shot press: Navigate to DevelopingDisplay screen
   const handleShotPress = (shot) => {
     if (shot.isDeveloped) {
-      setSelectedShot(shot);
+      navigation.navigate("DevelopingDisplay", { shot });
     }
   };
 
-  const closeDevelopedShot = () => {
-    setSelectedShot(null);
-  };
-
+  // Handle shot developed action
   const handleShotDeveloped = (shotId) => {
     updateShot(shotId, { isDeveloped: true });
   };
@@ -62,8 +59,6 @@ export default function DevelopingRoll() {
       </View>
     );
   }
-
-  console.log(developingShots);
 
   return (
     <View style={layoutStyles.wrapper}>
@@ -88,16 +83,6 @@ export default function DevelopingRoll() {
             No developing shots found.
           </Text>
         </View>
-      )}
-
-      {selectedShot && (
-        <BlurView intensity={25} style={StyleSheet.absoluteFill}>
-          <DevelopingDisplay
-            shotId={selectedShot._id}
-            onClose={closeDevelopedShot}
-            shot={selectedShot}
-          />
-        </BlurView>
       )}
     </View>
   );

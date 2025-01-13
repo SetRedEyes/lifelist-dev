@@ -17,10 +17,9 @@ import DangerAlert from "../../../alerts/DangerAlert";
 export default function EditMedia() {
   const navigation = useNavigation();
   const { params } = useRoute();
-  const { collage, updateCollage, hasModified } = useCreateCollageContext();
+  const { collage, updateCollage, hasModified, setCollages, setCurrentIndex } =
+    useCreateCollageContext();
   const [showAlert, setShowAlert] = useState(false);
-
-  const returnTo = params?.returnTo || "MainFeed";
 
   // CameraRoll context
   const {
@@ -36,6 +35,16 @@ export default function EditMedia() {
       initializeCameraRollCache();
     }
   }, [isCameraRollCacheInitialized]);
+
+  // Save collages and currentIndex in context when the screen loads
+  useEffect(() => {
+    if (params?.collages) {
+      setCollages(params.collages);
+    }
+    if (params?.currentIndex !== undefined) {
+      setCurrentIndex(params.currentIndex);
+    }
+  }, [params, setCollages, setCurrentIndex]);
 
   // Query to fetch CameraShot details by image URLs
   const { data, loading, error } = useQuery(GET_CAMERA_SHOTS_BY_IMAGES, {
@@ -133,8 +142,9 @@ export default function EditMedia() {
     if (collage.images.length > 0) {
       updateCollage({ coverImage: collage.images[0].imageThumbnail });
       navigation.navigate("EditOverview", {
-        currentIndex: params?.currentIndex, // Pass currentIndex
-        returnTo: params?.returnTo,
+        collageId: params?.collageId,
+        collages: params?.collageId,
+        currentIndex: params?.currentIndex,
       });
     }
   };

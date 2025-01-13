@@ -6,7 +6,7 @@ import {
   Text,
   PanResponder,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Sharing from "expo-sharing";
 import DangerAlert from "../alerts/DangerAlert";
 import CameraShotDisplay from "../displays/CameraShotDisplay";
@@ -19,6 +19,7 @@ import { cameraStyles } from "../styles/screens/cameraStyles";
 import {
   containerStyles,
   headerStyles,
+  layoutStyles,
   symbolStyles,
 } from "../styles/components";
 import { useCameraRoll } from "../contexts/CameraRollContext";
@@ -26,18 +27,25 @@ import ButtonIcon from "../icons/ButtonIcon";
 
 const threshold = 75; // Drag distance threshold
 
-export default function DevelopingDisplay({ shotId, onClose, shot }) {
+export default function DevelopingDisplay() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { shot } = route.params;
+  console.log(shot);
+
   const { developingShots, removeShot } = useDevelopingRoll();
   const { addMoment } = useAdminProfile();
-  const { addShotToRoll, removeShotFromRoll } = useCameraRoll();
+  const {
+    isCameraRollCacheInitialized,
+    initializeCameraRollCache,
+    addShotToRoll,
+    removeShotFromRoll,
+    shots,
+  } = useCameraRoll();
 
   // Apollo Mutation for transferring the shot
   const [transferCameraShot] = useMutation(TRANSFER_CAMERA_SHOT);
 
-  const [imageUri, setImageUri] = useState(
-    shot?.image || shot?.imageThumbnail || null
-  );
   const [isDeleteAlertVisible, setIsDeleteAlertVisible] = useState(false);
   const [isAdditionalOptionsVisible, setIsAdditionalOptionsVisible] =
     useState(false);
@@ -73,7 +81,7 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
         <View style={headerStyles.headerLeft}>
           <ButtonIcon
             name="xmark"
-            onPress={handleClose}
+            onPress={() => navigation.goBack()}
             style={symbolStyles.xmark}
           />
         </View>
@@ -89,23 +97,18 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
         </View>
       ),
     });
-  }, [shot, handleClose]);
+  }, [shot, navigation, handleDeletePress]);
 
-  // === Handle Close ===
-  const handleClose = () => {
-    navigation.setOptions({ headerShown: false });
-    onClose();
-  };
-
+  // === Fade In Animation ===
   useEffect(() => {
-    if (imageUri) {
+    if (shot?.image || shot?.imageThumbnail) {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 800,
         useNativeDriver: true,
       }).start();
     }
-  }, [imageUri]);
+  }, [shot]);
 
   // Configure PanResponder for drag gestures
   const panResponder = useRef(
@@ -119,7 +122,7 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance > threshold) {
-          onClose();
+          navigation.goBack();
         } else {
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
@@ -134,6 +137,14 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
   useEffect(() => {
     const transferShot = async () => {
       try {
+        if (!isCameraRollCacheInitialized) {
+          await initializeCameraRollCache();
+        }
+
+        // Check if the shot already exists in Camera Roll
+        const existingShot = shots.find((s) => s._id === shot._id);
+        if (existingShot) return; // Prevent duplicate transfers
+
         await transferCameraShot({
           variables: { shotId: shot._id },
         });
@@ -146,9 +157,9 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
         });
 
         // Remove from DevelopingRoll if it exists
-        const shotExists = developingShots.some((shot) => shot._id === shotId);
+        const shotExists = developingShots.some((s) => s._id === shot._id);
         if (shotExists) {
-          removeShot(shotId);
+          removeShot(shot._id);
         }
       } catch (error) {
         console.error("Error transferring shot:", error);
@@ -156,12 +167,12 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
     };
 
     if (shot) transferShot();
-  }, [shot, transferCameraShot, addShotToRoll]);
+  }, [shot, transferCameraShot, addShotToRoll, shots]);
 
   // === Actions ===
   const handleSharePress = async () => {
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(imageUri);
+      await Sharing.shareAsync(shot.image || shot.imageThumbnail);
     } else {
       alert("Sharing is not available.");
     }
@@ -173,10 +184,10 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
 
   const handleConfirmPostToMoment = async () => {
     try {
-      if (!shotId) return;
+      if (!shot._id) return;
 
       // Use AdminProfileContext's addMoment
-      await addMoment({ cameraShotId: shotId });
+      await addMoment({ cameraShotId: shot._id });
 
       // Success feedback
       setFeedbackMessage("Moment successfully posted!");
@@ -205,8 +216,7 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
 
       // Remove from CameraRoll
       await removeShotFromRoll(shot._id);
-
-      onClose();
+      navigation.goBack();
     } catch (error) {
       console.error("Error deleting shot:", error);
       alert("Failed to delete shot.");
@@ -223,7 +233,7 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
   const handleAddToPress = () => setIsAdditionalOptionsVisible(true);
 
   // === Loading State ===
-  if (!imageUri) {
+  if (!shot?.image && !shot?.imageThumbnail) {
     return (
       <View style={containerStyles.loadingContainer}>
         <ActivityIndicator size="large" color="#fff" />
@@ -234,7 +244,7 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
 
   // === Main Render ===
   return (
-    <View style={{ flex: 1 }}>
+    <View style={layoutStyles.wrapper}>
       <Animated.View
         {...panResponder.panHandlers}
         style={[
@@ -246,7 +256,7 @@ export default function DevelopingDisplay({ shotId, onClose, shot }) {
       >
         <CameraShotDisplay
           shotId={shot._id}
-          imageUrl={imageUri}
+          imageUrl={shot.image || shot.imageThumbnail}
           developingImage={true}
         />
       </Animated.View>

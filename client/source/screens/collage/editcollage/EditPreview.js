@@ -10,7 +10,6 @@ import {
 import CollagePreviewDisplay from "../../../displays/CollagePreviewDisplay";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useCreateCollageContext } from "../../../contexts/CreateCollageContext";
-import { useAuth } from "../../../contexts/AuthContext";
 import { useAdminProfile } from "../../../contexts/AdminProfileContext";
 import { useMutation, useQuery } from "@apollo/client";
 import { UPDATE_COLLAGE } from "../../../utils/mutations/collageCreationMutations";
@@ -19,19 +18,20 @@ import { symbolStyles } from "../../../styles/components/symbolStyles";
 import { headerStyles } from "../../../styles/components";
 import { GET_USER_PROFILE } from "../../../utils/queries/userQueries";
 import { useHeaderHeight } from "@react-navigation/elements";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export default function EditPreview() {
   const navigation = useNavigation();
   const { params } = useRoute();
   const { updateCollageInProfile } = useAdminProfile();
-  const { collage, resetCollage } = useCreateCollageContext();
-  const { currentUser } = useAuth();
+  const { collage, resetCollage, collages, currentIndex } =
+    useCreateCollageContext();
   const { images, caption, taggedUsers, coverImage, _id: collageId } = collage;
-  const headerHeight = useHeaderHeight();
-
-  const screenHeight = Dimensions.get("window").height;
+  const { currentUser } = useAuth();
 
   // Calculate dynamic collage height
+  const screenHeight = Dimensions.get("window").height;
+  const headerHeight = useHeaderHeight();
   const collageHeight = screenHeight - headerHeight - 83;
 
   // Fetch user profile data
@@ -46,17 +46,29 @@ export default function EditPreview() {
 
   // Mutation to update the collage
   const [updateCollage] = useMutation(UPDATE_COLLAGE, {
-    onCompleted: () => {
-      const returnTo = params?.returnTo || "MainFeed";
-      console.log(returnTo);
+    onCompleted: (data) => {
+      if (data?.updateCollage?.success) {
+        updateCollageInProfile({
+          _id: collageId,
+          coverImage,
+        });
+        resetCollage();
 
-      navigation.navigate(returnTo, {
-        collageId: params?.collageId,
-        index: params?.currentIndex || 0, // Pass currentIndex
-      });
+        // ✅ Use context values instead of navigation params
+        navigation.navigate("CollageStack", {
+          screen: "ViewCollage",
+          params: {
+            collages,
+            initialIndex: currentIndex,
+          },
+        });
+      } else {
+        Alert.alert("Error", "Failed to update the collage.");
+      }
     },
     onError: (error) => {
       console.error(error.message);
+      Alert.alert("Error", "An error occurred while updating the collage.");
     },
   });
 
@@ -83,25 +95,6 @@ export default function EditPreview() {
           coverImage,
         },
       });
-
-      if (data?.updateCollage?.success) {
-        // Package the updated collage information
-        const updatedCollage = {
-          _id: collageId,
-          coverImage: coverImage, // The new cover image
-        };
-
-        // Update the context
-        updateCollageInProfile(updatedCollage);
-
-        // Reset the collage state and navigate back
-        resetCollage();
-        handleNavigateBack();
-      } else {
-        throw new Error(
-          data?.updateCollage?.message || "Failed to update collage."
-        );
-      }
     } catch (error) {
       console.error("Error updating collage:", error.message);
       Alert.alert(
@@ -109,12 +102,6 @@ export default function EditPreview() {
         "An error occurred while updating the collage. Please try again."
       );
     }
-  };
-
-  // Function to navigate back to the originating screen
-  const handleNavigateBack = () => {
-    const returnTo = params?.returnTo || "MainFeed";
-    navigation.navigate(returnTo, { collageId });
   };
 
   // Configure header dynamically
@@ -159,7 +146,6 @@ export default function EditPreview() {
           userProfile={userData?.getUserProfileById}
         />
       </View>
-      {/* Overlay to cover the bottom tab navigator */}
       <Pressable
         style={styles.overlay}
         onPress={() => alert("Tab navigation is disabled in this screen.")}

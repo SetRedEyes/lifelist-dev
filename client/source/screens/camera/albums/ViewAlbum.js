@@ -1,11 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import {
-  View,
-  FlatList,
-  Alert,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
+import { View, FlatList, Alert, ActivityIndicator, Text } from "react-native";
 import {
   useNavigation,
   useRoute,
@@ -19,6 +13,7 @@ import {
   layoutStyles,
   headerStyles,
   symbolStyles,
+  containerStyles,
 } from "../../../styles/components";
 
 export default function ViewAlbum() {
@@ -27,7 +22,7 @@ export default function ViewAlbum() {
   const { albumId, fromScreen } = route.params;
 
   const [alertVisible, setAlertVisible] = useState(false);
-  const [shots, setShots] = useState([]); // Store paginated shots
+  const [shots, setShots] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
@@ -53,12 +48,13 @@ export default function ViewAlbum() {
       headerStyle: {
         backgroundColor: "#121212",
       },
+      gestureEnabled: fromScreen !== "CreateAlbum", // Disable gesture if coming from CreateAlbum
       headerLeft: () => (
         <View style={headerStyles.headerLeft}>
           <ButtonIcon
             name="chevron.backward"
             weight="medium"
-            onPress={() => handleBackPress()} // Handle back press dynamically
+            onPress={() => handleBackPress()}
             style={symbolStyles.backArrow}
           />
         </View>
@@ -70,8 +66,8 @@ export default function ViewAlbum() {
             weight="medium"
             onPress={() =>
               navigation.navigate("ManageAlbumShots", {
-                albumId, // Pass the current album's ID
-                associatedShots: shots, // Pass the current list of shots for this album
+                albumId,
+                associatedShots: shots,
               })
             }
             style={symbolStyles.pencil}
@@ -80,7 +76,7 @@ export default function ViewAlbum() {
             <ButtonIcon
               name="trash"
               weight="medium"
-              onPress={handleDeleteAlbum} // Open delete confirmation
+              onPress={handleDeleteAlbum}
               style={symbolStyles.trash}
               tintColor={"#E53935"}
             />
@@ -95,14 +91,11 @@ export default function ViewAlbum() {
     albumId,
     shots,
     handleBackPress,
+    fromScreen,
   ]);
 
   const handleBackPress = () => {
-    if (fromScreen === "CreateAlbum") {
-      navigation.navigate("CameraRoll"); // Navigate to CameraRoll
-    } else {
-      navigation.goBack(); // Default behavior
-    }
+    navigation.goBack();
   };
 
   // Fetch paginated shots
@@ -117,7 +110,7 @@ export default function ViewAlbum() {
         hasNextPage: newHasNext,
       } = await fetchPaginatedAlbumShots(albumId, nextCursor);
 
-      if (newShots.length === 0 && !newCursor) return; // Skip updates for empty data
+      if (newShots.length === 0 && !newCursor) return;
 
       const uniqueShots = [
         ...shots,
@@ -151,8 +144,8 @@ export default function ViewAlbum() {
   const confirmDeleteAlbum = async () => {
     setAlertVisible(false);
     try {
-      // Call the context function to delete the album and update the cache
       await removeAlbumFromCache(albumId);
+      navigation.navigate("CameraRoll");
     } catch (error) {
       console.error("[ViewAlbum] Failed to delete album:", error);
       Alert.alert("Error", "Failed to delete album.");
@@ -160,9 +153,10 @@ export default function ViewAlbum() {
   };
 
   // Render individual shots
-  const renderShot = ({ item }) => (
+  const renderShot = ({ item, index }) => (
     <CameraShotNavigateCard
       shot={item}
+      index={index}
       navigation={navigation}
       fromAlbum={true}
       albumShots={shots}
@@ -171,17 +165,27 @@ export default function ViewAlbum() {
 
   return (
     <View style={layoutStyles.wrapper}>
-      <FlatList
-        data={shots}
-        renderItem={renderShot}
-        keyExtractor={(item) => item._id}
-        numColumns={3}
-        onEndReached={loadMoreShots}
-        onEndReachedThreshold={0.5} // Trigger when 50% of the list remains
-        ListFooterComponent={
-          loading ? <ActivityIndicator size="small" color="#6AB952" /> : null
-        }
-      />
+      {loading ? (
+        <View style={containerStyles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6AB952" />
+          <Text style={containerStyles.loadingText}>
+            Loading album shots...
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={shots}
+          renderItem={renderShot}
+          keyExtractor={(item) => item._id}
+          numColumns={3}
+          onEndReached={loadMoreShots}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loading ? <ActivityIndicator size="small" color="#6AB952" /> : null
+          }
+        />
+      )}
+
       <DangerAlert
         visible={alertVisible}
         onRequestClose={() => setAlertVisible(false)}

@@ -36,6 +36,8 @@ const { width, height } = Dimensions.get("window");
 
 export default function CollageDisplay({
   collageId,
+  collages,
+  currentIndex,
   isViewCollageScreen = false,
 }) {
   const { currentUser } = useAuth();
@@ -53,7 +55,6 @@ export default function CollageDisplay({
   const [showParticipants, setShowParticipants] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [isReposted, setIsReposted] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -141,7 +142,6 @@ export default function CollageDisplay({
 
   const handleScroll = (event) => {
     const index = Math.floor(event.nativeEvent.contentOffset.x / width);
-    setCurrentIndex(index);
   };
 
   const handleLikePress = async () => {
@@ -302,8 +302,9 @@ export default function CollageDisplay({
             taggedUsers:
               data?.markCollageViewedAndGetCollageById?.collage.tagged || [],
           }}
-          isViewCollageScreen={isViewCollageScreen}
+          collages={collages}
           currentIndex={currentIndex}
+          isViewCollageScreen={isViewCollageScreen}
         />
       ) : (
         <DefaultCollageOptions

@@ -40,18 +40,21 @@ export default function AddExperiencesOverview() {
     if (!allExperiencesHaveList || !hasExperiences) return;
 
     try {
-      for (const exp of lifeListExperiences) {
+      // Batch all experience additions
+      const experiencePromises = lifeListExperiences.map(async (exp) => {
         const experiencePayload = {
           lifeListId,
           experience: exp.experience,
           list: exp.list,
           associatedShots: exp.associatedShots,
         };
+        return addLifeListExperienceToCache(experiencePayload);
+      });
 
-        // Add each experience individually
-        await addLifeListExperienceToCache(experiencePayload);
-      }
+      // Await all promises
+      await Promise.all(experiencePromises);
 
+      // Navigate to LifeList after all additions are complete
       navigation.navigate("LifeList");
     } catch (error) {
       console.error("Error adding experiences:", error);

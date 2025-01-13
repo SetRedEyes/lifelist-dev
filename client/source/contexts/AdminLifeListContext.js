@@ -136,9 +136,10 @@ export const AdminLifeListProvider = ({ children }) => {
           experiences: updatedExperiences,
         };
 
-        setLifeList(updatedLifeList);
-
-        console.log("HELLo");
+        setLifeList((prevLifeList) => ({
+          ...prevLifeList,
+          experiences: [transformedNewExperience, ...prevLifeList.experiences],
+        }));
 
         // Cache updated LifeList and images
         await cacheLifeList(updatedLifeList);

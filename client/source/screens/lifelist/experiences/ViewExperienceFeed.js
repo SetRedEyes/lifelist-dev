@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  View,
-  FlatList,
-  ActivityIndicator,
-  Dimensions,
-  Text,
-} from "react-native";
+import { View, FlatList, Dimensions, Text } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import DangerAlert from "../../../alerts/DangerAlert";
 import { headerStyles } from "../../../styles/components/headerStyles";

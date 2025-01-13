@@ -31,6 +31,7 @@
     "expo-clipboard": "~7.0.0",
     "expo-contacts": "~14.0.2",
     "expo-file-system": "~18.0.3",
+    "expo-firebase-recaptcha": "^2.3.1",
     "expo-gl": "~14.0.2",
     "expo-image": "^2.0.3",
     "expo-image-manipulator": "^13.0.5",
@@ -62,7 +63,8 @@
     "react-native-screens": "^4.4.0",
     "react-native-svg": "^15.10.1",
     "react-native-tab-view": "^4.0.2",
-    "react-native-view-shot": "^3.8.0"
+    "react-native-view-shot": "^3.8.0",
+    "react-native-webview": "^13.12.5"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0"

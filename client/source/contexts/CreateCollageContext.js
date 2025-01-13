@@ -19,8 +19,8 @@ export const CreateCollageProvider = ({ children }) => {
 
   const [collage, setCollage] = useState(initialCollageState);
   const [hasModified, setHasModified] = useState(false); // Tracks if collage is modified
-
-  const { addCollage } = useAdminProfile(); // Access AdminProfileContext
+  const [collages, setCollages] = useState([]); // New state for collages
+  const [currentIndex, setCurrentIndex] = useState(0); // New state for current index
 
   // Function to update the collage state
   const updateCollage = (updates) => {
@@ -32,6 +32,8 @@ export const CreateCollageProvider = ({ children }) => {
   const resetCollage = () => {
     setCollage(initialCollageState);
     setHasModified(false); // Reset modification tracker
+    setCollages([]);
+    setCurrentIndex(0);
   };
 
   return (
@@ -41,6 +43,10 @@ export const CreateCollageProvider = ({ children }) => {
         updateCollage,
         resetCollage,
         hasModified,
+        collages,
+        setCollages,
+        currentIndex,
+        setCurrentIndex,
       }}
     >
       {children}

@@ -46,20 +46,20 @@ export default function CameraRoll() {
       headerLeft: () => (
         <View style={headerStyles.headerLeft}>
           <ButtonIcon
-            name="chevron.backward"
+            name="folder.badge.plus"
             weight="medium"
-            onPress={() => navigation.goBack()} // Navigate back
-            style={symbolStyles.backArrow}
+            onPress={() => setAlbumModalVisible(true)} // Open album creation modal
+            style={symbolStyles.folder}
           />
         </View>
       ),
       headerRight: () => (
         <View style={headerStyles.headerRight}>
           <ButtonIcon
-            name="folder.badge.plus"
+            name="chevron.forward"
             weight="medium"
-            onPress={() => setAlbumModalVisible(true)} // Open album creation modal
-            style={symbolStyles.folder}
+            onPress={() => navigation.goBack()} // Navigate back
+            style={symbolStyles.backArrow}
           />
         </View>
       ),
@@ -133,42 +133,45 @@ export default function CameraRoll() {
   };
 
   // Render the Shots section
-  const renderShotsSection = () => (
-    <View style={{ marginTop: 16 }}>
-      <Text style={[cameraStyles.headerText, { marginLeft: 8 }]}>
-        Camera Shots
-      </Text>
-      {shots.length > 0 ? (
-        <FlatList
-          data={shots}
-          renderItem={({ item, index }) => (
-            <CameraShotNavigateCard
-              shot={item}
-              navigation={navigation}
-              index={index}
-            />
-          )}
-          keyExtractor={(item) => item._id}
-          numColumns={3}
-          columnWrapperStyle={cameraStyles.columnWrapper}
-          showsVerticalScrollIndicator={false}
-          onEndReached={() => {
-            loadMoreShots();
-          }}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            isFetchingMore ? (
-              <ActivityIndicator size="small" color="#6AB952" />
-            ) : null
-          }
-        />
-      ) : (
-        <Text style={cameraStyles.emptyStateText}>
-          No camera shots available.
+  const renderShotsSection = () => {
+    return (
+      <View style={{ marginTop: 16 }}>
+        <Text style={[cameraStyles.headerText, { marginLeft: 8 }]}>
+          Camera Shots
         </Text>
-      )}
-    </View>
-  );
+        {shots.length > 0 ? (
+          <FlatList
+            data={shots}
+            renderItem={({ item, index }) => (
+              <CameraShotNavigateCard
+                shot={item}
+                cameraRoll={shots}
+                navigation={navigation}
+                index={index}
+              />
+            )}
+            keyExtractor={(item) => item._id}
+            numColumns={3}
+            columnWrapperStyle={cameraStyles.columnWrapper}
+            showsVerticalScrollIndicator={false}
+            onEndReached={() => {
+              loadMoreShots();
+            }}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingMore ? (
+                <ActivityIndicator size="small" color="#6AB952" />
+              ) : null
+            }
+          />
+        ) : (
+          <Text style={cameraStyles.emptyStateText}>
+            No camera shots available.
+          </Text>
+        )}
+      </View>
+    );
+  };
 
   // Combine Albums and Shots sections into one FlatList
   const renderMainList = () => (

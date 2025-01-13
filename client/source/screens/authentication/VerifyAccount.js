@@ -9,7 +9,7 @@ import {
   Alert,
   Keyboard,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import ButtonIcon from "../../icons/ButtonIcon";
 import AuthenticationButton from "../../buttons/AuthenticationButton";
 import {
@@ -20,8 +20,10 @@ import {
 import { useCreateProfileContext } from "../../contexts/CreateProfileContext";
 
 export default function VerifyAccount() {
-  const { profile } = useCreateProfileContext();
+  const { profile, updateProfile } = useCreateProfileContext();
   const navigation = useNavigation();
+  const route = useRoute(); // Get the navigation params
+  const { confirmationResult } = route.params; // Destructure confirmationResult
   const codeLength = 6;
   const inputs = Array(codeLength)
     .fill(0)
@@ -42,15 +44,24 @@ export default function VerifyAccount() {
     }
   };
 
-  // Format Phone Number
-  const formatPhoneNumber = (phoneNumber) => {
-    if (!phoneNumber) return "";
-    const cleaned = phoneNumber.replace(/\D/g, "");
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return `(${match[1]})-${match[2]}-${match[3]}`;
+  // Verify the code and update the profile
+  const handleVerification = async () => {
+    try {
+      const verificationCode = code.join(""); // Combine the code digits
+
+      // Confirm the code using Firebase Auth
+      await confirmationResult.confirm(verificationCode);
+
+      // Update the phone number in the profile
+      updateProfile("phoneNumber", profile.phoneNumber);
+
+      // Navigate to the next screen
+      navigation.navigate("SetLoginInformation");
+      Alert.alert("Success", "Your phone number has been verified!");
+    } catch (error) {
+      Alert.alert("Error", "Invalid verification code. Please try again.");
+      console.error("Verification Error:", error);
     }
-    return phoneNumber;
   };
 
   // Configure Header
@@ -71,7 +82,7 @@ export default function VerifyAccount() {
           <Pressable
             onPress={() => {
               if (isValid) {
-                navigation.navigate("SetLoginInformation");
+                handleVerification();
               } else {
                 Alert.alert("Error", "Please enter the full 6-digit code.");
               }
@@ -102,9 +113,8 @@ export default function VerifyAccount() {
         />
         <Text style={styles.header}>Verify Account</Text>
         <Text style={styles.smallText}>
-          We sent you a 6-digit code to{" "}
-          {formatPhoneNumber(profile?.phoneNumber)}. Enter the code below to
-          confirm your phone number.
+          We sent you a 6-digit code to {profile?.phoneNumber}. Enter the code
+          below to confirm your phone number.
         </Text>
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
@@ -127,9 +137,7 @@ export default function VerifyAccount() {
           textColor={isValid ? "#6AB952" : "#696969"}
           width="85%"
           text={isValid ? "Verify Phone Number" : "Enter Code"}
-          onPress={
-            isValid ? () => navigation.navigate("SetLoginInformation") : null
-          }
+          onPress={isValid ? handleVerification : null}
         />
       </View>
 
