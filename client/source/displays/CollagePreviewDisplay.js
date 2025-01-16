@@ -167,9 +167,13 @@ const styles = StyleSheet.create({
   captionContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 8,
+    marginRight: 8,
   },
   caption: {
     color: "#fff",
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
   username: {
     fontWeight: "bold",

@@ -17,7 +17,8 @@ export const profileStyles = StyleSheet.create({
   },
   rightContainer: {
     flex: 1,
-    marginHorizontal: 20,
+    marginLeft: 20,
+    marginRight: 8,
   },
   profilePicture: {
     height: 100,
@@ -28,6 +29,7 @@ export const profileStyles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     marginBottom: 12,
+    marginHorizontal: 8,
   },
   stat: {
     alignItems: "center",

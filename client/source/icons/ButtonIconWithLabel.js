@@ -9,6 +9,7 @@ export default function ButtonIconWithLabel({
   onPress,
   disabled = false,
   size = "extralarge", // default or large
+  style,
 }) {
   return (
     <Pressable
@@ -19,7 +20,7 @@ export default function ButtonIconWithLabel({
       onPress={onPress}
       disabled={disabled}
     >
-      <ButtonIcon name={iconName} size={size} onPress={onPress} />
+      <ButtonIcon name={iconName} size={size} onPress={onPress} style={style} />
       <Text style={iconStyles.labelText}>{label}</Text>
     </Pressable>
   );

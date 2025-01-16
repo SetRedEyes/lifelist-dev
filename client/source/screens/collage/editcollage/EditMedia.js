@@ -22,21 +22,9 @@ export default function EditMedia() {
   const [showAlert, setShowAlert] = useState(false);
 
   // CameraRoll context
-  const {
-    shots,
-    initializeCameraRollCache,
-    loadNextPage,
-    isCameraRollCacheInitialized,
-  } = useCameraRoll();
+  const { shots, loadNextPage, hasNextPage } = useCameraRoll();
 
-  // Initialize camera roll cache
-  useEffect(() => {
-    if (!isCameraRollCacheInitialized) {
-      initializeCameraRollCache();
-    }
-  }, [isCameraRollCacheInitialized]);
-
-  // Save collages and currentIndex in context when the screen loads
+  // Fetch collages and currentIndex from params
   useEffect(() => {
     if (params?.collages) {
       setCollages(params.collages);
@@ -65,6 +53,18 @@ export default function EditMedia() {
       });
     }
   }, [data]);
+
+  // Fetch initial camera shots
+  useEffect(() => {
+    const fetchInitialShots = async () => {
+      try {
+        await loadNextPage();
+      } catch (error) {
+        console.error("[EditMedia] Error loading initial shots:", error);
+      }
+    };
+    fetchInitialShots();
+  }, [loadNextPage]);
 
   // Set header options
   useEffect(() => {
@@ -143,7 +143,7 @@ export default function EditMedia() {
       updateCollage({ coverImage: collage.images[0].imageThumbnail });
       navigation.navigate("EditOverview", {
         collageId: params?.collageId,
-        collages: params?.collageId,
+        collages: params?.collages,
         currentIndex: params?.currentIndex,
       });
     }
@@ -174,6 +174,12 @@ export default function EditMedia() {
   if (loading) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error.message}</Text>;
 
+  const handleEndReached = () => {
+    if (hasNextPage) {
+      loadNextPage();
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: "#121212" }}>
       <View style={styles.selectedContainer}>
@@ -199,7 +205,7 @@ export default function EditMedia() {
         numColumns={3}
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.flatListContent}
-        onEndReached={loadNextPage}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
       />
 
@@ -230,10 +236,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   columnWrapper: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    marginHorizontal: 0,
   },
   flatListContent: {
     flexGrow: 1,
-    paddingBottom: 20,
   },
 });

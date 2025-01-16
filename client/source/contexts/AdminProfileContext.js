@@ -42,8 +42,7 @@ export const AdminProfileProvider = ({ children }) => {
   const [originalAdminProfile, setOriginalAdminProfile] = useState(null);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [profilePictureUri, setProfilePictureUri] = useState(null);
-
-  console.log(currentUser);
+  const [isSaving, setIsSaving] = useState(null);
 
   // State for counts
   const [counts, setCounts] = useState({
@@ -715,6 +714,8 @@ export const AdminProfileProvider = ({ children }) => {
         updateAdminProfileField,
         saveAdminProfile,
         resetAdminChanges,
+        isSaving,
+        setIsSaving,
         counts,
         collages,
         reposts,

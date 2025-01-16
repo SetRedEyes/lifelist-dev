@@ -266,11 +266,19 @@ export default function ViewShot() {
                 iconName="checkmark"
                 label="Confirm Moment"
                 onPress={handleConfirmPostToMoment}
+                style={{
+                  height: 25,
+                  width: 24.93,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="xmark"
                 label="Cancel"
                 onPress={handleCancelPostToMoment}
+                style={{
+                  height: 23,
+                  width: 22.49,
+                }}
               />
             </>
           ) : isAdditionalOptionsVisible ? (
@@ -279,16 +287,28 @@ export default function ViewShot() {
                 iconName="folder"
                 label="Album"
                 onPress={handleAlbumPress}
+                style={{
+                  height: 20.02,
+                  width: 25,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="star"
                 label="Experience"
                 onPress={handleExperiencePress}
+                style={{
+                  height: 25.08,
+                  width: 25,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="arrow.left"
                 label="Back"
                 onPress={resetToMainButtons}
+                style={{
+                  height: 20.02,
+                  width: 25,
+                }}
               />
             </>
           ) : (
@@ -297,16 +317,30 @@ export default function ViewShot() {
                 iconName="paperplane"
                 label="Share"
                 onPress={handleSharePress}
+                style={{
+                  height: 23.74,
+                  width: 24,
+                  marginTop: 2,
+                  marginRight: 2,
+                }}
               />
               <ButtonIconWithLabel
-                iconName="rectangle.portrait"
+                iconName="rectangle.portrait.on.rectangle.portrait"
                 label="Post Moment"
                 onPress={handlePostToMomentPress}
+                style={{
+                  height: 25.5,
+                  width: 21.14,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="folder"
                 label="Add To"
                 onPress={handleAddToPress}
+                style={{
+                  height: 19.96,
+                  width: 25,
+                }}
               />
             </>
           )}

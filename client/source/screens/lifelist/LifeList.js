@@ -18,6 +18,7 @@ import CategoryNavigator from "../../navigators/lifelist/CategoryNavigator";
 import { useAdminLifeList } from "../../contexts/AdminLifeListContext";
 import ButtonIcon from "../../icons/ButtonIcon";
 import { symbolStyles } from "../../styles/components/symbolStyles";
+import { headerStyles } from "../../styles/components";
 
 export default function LifeList() {
   const navigation = useNavigation();
@@ -66,12 +67,12 @@ export default function LifeList() {
   useEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
-        <View style={styles.headerLeft}>
+        <View style={headerStyles.headerLeft}>
           <Text style={styles.headerLeftText}>My LifeList</Text>
         </View>
       ),
       headerRight: () => (
-        <View style={styles.headerRight}>
+        <View style={headerStyles.headerRight}>
           {/* ListView Button */}
           <ButtonIcon
             name="line.3.horizontal"

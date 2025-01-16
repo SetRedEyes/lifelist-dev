@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Pressable,
+  Alert,
+} from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import DangerAlert from "../../../alerts/DangerAlert";
 import { useCameraAlbums } from "../../../contexts/CameraAlbumContext"; // CameraAlbum context
@@ -23,20 +30,19 @@ export default function CreateAlbum() {
   const [isAlertVisible, setIsAlertVisible] = useState(false);
 
   const { addAlbumToCache } = useCameraAlbums();
-  const {
-    initializeCameraRollCache,
-    shots: cameraRollShots,
-    isCameraRollCacheInitialized,
-  } = useCameraRoll();
+  const { shots: cameraRollShots, loadNextPage, hasNextPage } = useCameraRoll();
 
   useEffect(() => {
-    const initializeCache = async () => {
-      if (!isCameraRollCacheInitialized) {
-        await initializeCameraRollCache();
+    // Fetch the initial page of camera roll shots on mount
+    const fetchInitialShots = async () => {
+      try {
+        await loadNextPage();
+      } catch (error) {
+        console.error("[CreateAlbum] Error loading initial shots:", error);
       }
     };
-    initializeCache();
-  }, [initializeCameraRollCache, isCameraRollCacheInitialized]);
+    fetchInitialShots();
+  }, [loadNextPage]);
 
   useEffect(() => {
     setChangesMade(selectedShots.length > 0);
@@ -108,7 +114,7 @@ export default function CreateAlbum() {
 
   useEffect(() => {
     navigation.setOptions({
-      title: albumTitle,
+      title: "Select Shots",
       headerLeft: () => (
         <View style={headerStyles.headerLeft}>
           <ButtonIcon
@@ -142,6 +148,12 @@ export default function CreateAlbum() {
     });
   }, [navigation, albumTitle, changesMade, saveChanges]);
 
+  const handleEndReached = () => {
+    if (hasNextPage) {
+      loadNextPage();
+    }
+  };
+
   const renderShot = ({ item }) => (
     <CameraShotSelectCard
       shot={item}
@@ -149,14 +161,6 @@ export default function CreateAlbum() {
       onCheckboxToggle={() => handleCheckboxToggle(item)}
     />
   );
-
-  if (!isCameraRollCacheInitialized) {
-    return (
-      <View style={containerStyles.loadingContainer}>
-        <Text style={containerStyles.loadingText}>Loading Camera Roll...</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={layoutStyles.wrapper}>
@@ -177,6 +181,8 @@ export default function CreateAlbum() {
         keyExtractor={(item) => item._id}
         numColumns={3}
         columnWrapperStyle={styles.columnWrapper}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5} // Trigger loading closer to the bottom
       />
     </View>
   );
@@ -184,6 +190,7 @@ export default function CreateAlbum() {
 
 const styles = StyleSheet.create({
   columnWrapper: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    marginHorizontal: 0,
   },
 });

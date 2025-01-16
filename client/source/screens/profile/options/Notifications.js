@@ -8,12 +8,12 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
-import { DELETE_NOTIFICATION } from "../../../utils/mutations";
 import NotificationCard from "../../../cards/user/NotificationCard";
 import { notificationsStyles } from "../../../styles/screens/notificationStyles";
 import SearchBar from "../../../headers/SearchBar";
-import { GET_USER_NOTIFICATIONS } from "../../../utils/queries/userQueries";
 import { useAdminProfile } from "../../../contexts/AdminProfileContext";
+import { GET_USER_NOTIFICATIONS } from "../../../utils/queries/userQueries";
+import { DELETE_NOTIFICATION } from "../../../utils/mutations/notificationMutations";
 
 export default function Notifications({ navigation }) {
   const [searchQuery, setSearchQuery] = useState("");

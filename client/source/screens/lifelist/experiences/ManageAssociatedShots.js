@@ -11,12 +11,7 @@ import DangerAlert from "../../../alerts/DangerAlert";
 export default function ManageAssociatedShots() {
   const route = useRoute();
   const navigation = useNavigation();
-  const {
-    shots,
-    loadNextPage,
-    initializeCameraRollCache,
-    isCameraRollCacheInitialized,
-  } = useCameraRoll();
+  const { shots, loadNextPage, hasNextPage } = useCameraRoll();
   const { updateLifeListExperienceInCache } = useAdminLifeList();
 
   const { experienceId, associatedShots } = route.params;
@@ -26,12 +21,7 @@ export default function ManageAssociatedShots() {
   const [isAlertVisible, setIsAlertVisible] = useState(false);
   const [title, setTitle] = useState("Manage Shots");
 
-  useEffect(() => {
-    if (!isCameraRollCacheInitialized) {
-      initializeCameraRollCache();
-    }
-  }, [isCameraRollCacheInitialized, initializeCameraRollCache]);
-
+  // Initialize selected shots and title based on associated shots
   useEffect(() => {
     if (associatedShots) {
       setSelectedShots([...associatedShots]);
@@ -39,6 +29,7 @@ export default function ManageAssociatedShots() {
     }
   }, [associatedShots]);
 
+  // Determine if the shots have been modified
   useEffect(() => {
     setIsModified(
       selectedShots.length !== associatedShots.length ||
@@ -49,6 +40,22 @@ export default function ManageAssociatedShots() {
     );
   }, [selectedShots, associatedShots]);
 
+  // Fetch initial shots when the component loads
+  useEffect(() => {
+    const fetchInitialShots = async () => {
+      try {
+        await loadNextPage();
+      } catch (error) {
+        console.error(
+          "[ManageAssociatedShots] Error loading initial shots:",
+          error
+        );
+      }
+    };
+    fetchInitialShots();
+  }, [loadNextPage]);
+
+  // Update navigation options with title and buttons
   useEffect(() => {
     navigation.setOptions({
       title,
@@ -80,15 +87,9 @@ export default function ManageAssociatedShots() {
         </View>
       ),
     });
-  }, [
-    navigation,
-    title,
-    isModified,
-    selectedShots,
-    experienceId,
-    handleBackPress,
-  ]);
+  }, [navigation, title, isModified, selectedShots, experienceId]);
 
+  // Handle the back press and show an alert if there are unsaved changes
   const handleBackPress = () => {
     if (isModified) {
       setIsAlertVisible(true); // Show alert for unsaved changes
@@ -97,6 +98,7 @@ export default function ManageAssociatedShots() {
     }
   };
 
+  // Save the selected shots and update the context
   const handleSave = async (selectedShots, experienceId) => {
     if (!isModified) return;
 
@@ -111,11 +113,13 @@ export default function ManageAssociatedShots() {
     }
   };
 
+  // Confirm leaving without saving changes
   const handleConfirmLeave = () => {
     setIsAlertVisible(false); // Close alert
     navigation.goBack(); // Navigate back
   };
 
+  // Cancel leaving and close the alert
   const handleCancelLeave = () => {
     setIsAlertVisible(false); // Close alert without leaving
   };
@@ -126,6 +130,7 @@ export default function ManageAssociatedShots() {
     ...shots.filter((shot) => !associatedShots.some((s) => s._id === shot._id)),
   ];
 
+  // Toggle selection for a shot
   const handleCheckboxToggle = (shotId) => {
     setSelectedShots((prev) => {
       const isAlreadySelected = prev.some((s) => s._id === shotId);
@@ -135,17 +140,12 @@ export default function ManageAssociatedShots() {
     });
   };
 
+  // Load more shots when the end of the list is reached
   const handleEndReached = () => {
-    loadNextPage();
+    if (hasNextPage) {
+      loadNextPage();
+    }
   };
-
-  if (!isCameraRollCacheInitialized) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading Camera Roll...</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#121212" }}>

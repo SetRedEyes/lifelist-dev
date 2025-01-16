@@ -55,7 +55,7 @@ export const GET_CAMERA_ALBUM = gql`
 // === Query: Get All Camera Shots === //
 
 export const GET_ALL_CAMERA_SHOTS = gql`
-  query GetAllCameraShots($cursor: ID, $limit: Int) {
+  query GetAllCameraShots($cursor: String, $limit: Int) {
     getAllCameraShots(cursor: $cursor, limit: $limit) {
       shots {
         _id

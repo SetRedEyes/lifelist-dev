@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
-  Text,
   View,
-  Pressable,
-  ActivityIndicator,
+  StyleSheet,
   FlatList,
   Dimensions,
-  StyleSheet,
+  Text,
+  Pressable,
   SafeAreaView,
 } from "react-native";
 import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
+import { useMutation } from "@apollo/client";
 import {
   LIKE_COLLAGE,
   UNLIKE_COLLAGE,
@@ -20,72 +20,35 @@ import {
   UNSAVE_COLLAGE,
   ARCHIVE_COLLAGE,
   UNARCHIVE_COLLAGE,
-  MARK_AND_GET_COLLAGE,
 } from "../utils/mutations/collageActionMutations";
-import { useMutation } from "@apollo/client";
 import Comments from "../menus/collage/Comments";
 import Participants from "../menus/collage/Participants";
-import CollageButtonIcon from "../icons/CollageButtonIcon";
-import { useAuth } from "../contexts/AuthContext";
-import { useAdminProfile } from "../contexts/AdminProfileContext";
 import AuthorCollageOptions from "../menus/collage/AuthorCollageOptions";
 import DefaultCollageOptions from "../menus/collage/DefaultCollageOptions";
+import CollageButtonIcon from "../icons/CollageButtonIcon";
 import { symbolStyles } from "../styles/components/symbolStyles";
-import SmallGreyButton from "../buttons/SmallGreyButton";
 import CollageButton from "../buttons/CollageButton";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
-export default function CollageDisplay({
-  collageId,
+export default function CollageMainFeedDisplay({
+  collage,
+  hasParticipants,
+  isAuthor,
   collages,
   currentIndex,
-  isViewCollageScreen = false,
 }) {
-  const { currentUser } = useAuth();
-  const { addRepost, removeRepost } = useAdminProfile();
   const navigation = useNavigation();
-
-  // Mutation to mark collage as viewed and get its details
-  const [markAndGetCollage, { loading, error, data }] = useMutation(
-    MARK_AND_GET_COLLAGE,
-    {
-      variables: { collageId },
-    }
-  );
-
-  const [showParticipants, setShowParticipants] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showParticipants, setShowParticipants] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isReposted, setIsReposted] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  const [isArchived, setIsArchived] = useState(false);
 
-  // Trigger mutation on component mount
-  useEffect(() => {
-    if (collageId) {
-      markAndGetCollage({ variables: { collageId } });
-    }
-  }, [collageId]);
+  const [isLiked, setIsLiked] = useState(collage.isLikedByCurrentUser);
+  const [isReposted, setIsReposted] = useState(collage.isRepostedByCurrentUser);
+  const [isSaved, setIsSaved] = useState(collage.isSavedByCurrentUser);
+  const [isArchived, setIsArchived] = useState(collage.isArchived);
 
-  // Update state based on mutation data
-  useEffect(() => {
-    if (data) {
-      const {
-        collage,
-        isLikedByCurrentUser,
-        isRepostedByCurrentUser,
-        isSavedByCurrentUser,
-      } = data.markCollageViewedAndGetCollageById;
-
-      setIsLiked(isLikedByCurrentUser);
-      setIsReposted(isRepostedByCurrentUser);
-      setIsSaved(isSavedByCurrentUser);
-      setIsArchived(collage.archived);
-    }
-  }, [data]);
-
+  // Mutations
   const [likeCollage] = useMutation(LIKE_COLLAGE, {
     onCompleted: () => setIsLiked(true),
   });
@@ -111,103 +74,74 @@ export default function CollageDisplay({
     onCompleted: () => setIsArchived(false),
   });
 
-  const collageData = data?.markCollageViewedAndGetCollageById;
-
-  if (!collageData) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
-
-  const {
-    collage,
-    isLikedByCurrentUser,
-    isRepostedByCurrentUser,
-    isSavedByCurrentUser,
-    hasParticipants,
-  } = collageData;
-  const { caption, images, author, createdAt } = collage;
-
-  const handleProfilePress = () => {
-    navigation.navigate("ProfileStack", {
-      screen: "Profile",
-      params: { userId: author._id },
-    });
-  };
-
-  const renderItem = ({ item }) => (
-    <Image
-      style={styles.image}
-      source={{
-        uri: item,
-      }}
-    />
-  );
-
-  const handleScroll = (event) => {
-    const index = Math.floor(event.nativeEvent.contentOffset.x / width);
-  };
-
+  // Handlers
   const handleLikePress = async () => {
-    if (isLiked) {
-      await unlikeCollage({ variables: { collageId } });
-    } else {
-      await likeCollage({ variables: { collageId } });
+    try {
+      if (isLiked) {
+        await unlikeCollage({ variables: { collageId: collage._id } });
+      } else {
+        await likeCollage({ variables: { collageId: collage._id } });
+      }
+    } catch (error) {
+      console.error("Error liking/unliking collage:", error.message);
     }
   };
 
   const handleRepostPress = async () => {
     try {
       if (isReposted) {
-        const { data } = await unrepostCollage({ variables: { collageId } });
-        if (data?.unrepostCollage?.success) {
-          await removeRepost(collageId);
-          setIsReposted(false);
-        }
+        await unrepostCollage({ variables: { collageId: collage._id } });
       } else {
-        const { data } = await repostCollage({ variables: { collageId } });
-        if (data?.repostCollage?.success) {
-          const repost = {
-            _id: data.repostCollage.collage._id,
-            coverImage: data.repostCollage.collage.coverImage,
-            createdAt: data.repostCollage.collage.createdAt,
-          };
-          await addRepost(repost);
-          setIsReposted(true);
-        }
+        await repostCollage({ variables: { collageId: collage._id } });
       }
     } catch (error) {
-      console.error("Error handling repost/unrepost:", error.message);
+      console.error("Error reposting/unreposting collage:", error.message);
     }
   };
 
   const handleSavePress = async () => {
-    if (isSaved) {
-      await unsaveCollage({ variables: { collageId } });
-    } else {
-      await saveCollage({ variables: { collageId } });
+    try {
+      if (isSaved) {
+        await unsaveCollage({ variables: { collageId: collage._id } });
+      } else {
+        await saveCollage({ variables: { collageId: collage._id } });
+      }
+    } catch (error) {
+      console.error("Error saving/unsaving collage:", error.message);
     }
   };
 
   const handleArchivePress = async () => {
-    if (isArchived) {
-      await unarchiveCollage({ variables: { collageId } });
-    } else {
-      await archiveCollage({ variables: { collageId } });
+    try {
+      if (isArchived) {
+        await unarchiveCollage({ variables: { collageId: collage._id } });
+      } else {
+        await archiveCollage({ variables: { collageId: collage._id } });
+      }
+    } catch (error) {
+      console.error("Error archiving/unarchiving collage:", error.message);
     }
   };
 
-  const handleOptionsPress = () => {
-    setShowOptions(!showOptions);
+  const renderImage = ({ item }) => (
+    <Image style={styles.image} source={{ uri: item }} />
+  );
+
+  const handleProfilePress = () => {
+    navigation.navigate("ProfileStack", {
+      screen: "Profile",
+      params: { userId: collage.author._id },
+    });
   };
 
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.imageContainer}>
         <FlatList
-          data={images}
-          renderItem={renderItem}
+          data={collage.images}
+          renderItem={renderImage}
           horizontal
           pagingEnabled
-          onScroll={handleScroll}
           keyExtractor={(item, index) => index.toString()}
           showsHorizontalScrollIndicator={false}
         />
@@ -234,7 +168,7 @@ export default function CollageDisplay({
             name="ellipsis"
             style={symbolStyles.ellipsis}
             tintColor="#ffffff"
-            onPress={handleOptionsPress}
+            onPress={() => setShowOptions(true)}
           />
         </View>
       </View>
@@ -243,20 +177,18 @@ export default function CollageDisplay({
           <Pressable onPress={handleProfilePress}>
             <Image
               style={styles.smallProfilePicture}
-              source={{
-                uri: author.profilePicture,
-              }}
+              source={{ uri: collage.author.profilePicture }}
             />
           </Pressable>
           <Text style={styles.caption}>
-            <Text onPress={handleProfilePress} style={styles.username}>
-              {author.username}{" "}
-            </Text>
-            {caption}
+            <Text style={styles.username}>{collage.author.username} </Text>
+            {collage.caption}
           </Text>
         </View>
         <View style={styles.bottomTextContainer}>
-          <CollageButton text={new Date(createdAt).toLocaleDateString()} />
+          <CollageButton
+            text={new Date(collage.createdAt).toLocaleDateString()}
+          />
           <View style={{ flexDirection: "row" }}>
             <CollageButton
               text={"Comments"}
@@ -273,42 +205,35 @@ export default function CollageDisplay({
           </View>
         </View>
       </View>
+      {/* Modals */}
       <Comments
         visible={showComments}
         onRequestClose={() => setShowComments(false)}
-        collageId={collageId}
+        collageId={collage._id}
       />
       <Participants
         visible={showParticipants}
         onRequestClose={() => setShowParticipants(false)}
-        collageId={collageId}
+        collageId={collage._id}
       />
-      {currentUser === author._id ? (
+      {isAuthor ? (
         <AuthorCollageOptions
           visible={showOptions}
           onRequestClose={() => setShowOptions(false)}
-          collageId={collageId}
+          collageId={collage._id}
           isArchived={isArchived}
           handleArchivePress={handleArchivePress}
-          collageData={{
-            caption,
-            images,
-            coverImage:
-              data?.markCollageViewedAndGetCollageById?.collage.coverImage,
-            taggedUsers:
-              data?.markCollageViewedAndGetCollageById?.collage.tagged || [],
-          }}
+          collage={collage}
           collages={collages}
           currentIndex={currentIndex}
-          isViewCollageScreen={isViewCollageScreen}
         />
       ) : (
         <DefaultCollageOptions
           visible={showOptions}
           onRequestClose={() => setShowOptions(false)}
-          collageId={collageId}
+          collageId={collage._id}
           isSaved={isSaved}
-          handleSavePress={handleSavePress}
+          onSavePress={handleSavePress}
         />
       )}
     </SafeAreaView>
@@ -357,8 +282,6 @@ const styles = StyleSheet.create({
     height: 35,
     width: 35,
     borderRadius: 4,
-    borderColor: "rgba(38, 40, 40, 0.3)",
-    borderWidth: 2,
     marginRight: 8,
   },
   bottomTextContainer: {

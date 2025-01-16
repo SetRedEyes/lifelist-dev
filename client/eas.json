@@ -1,7 +1,13 @@
 {
   "build": {
+    "development": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      }
+    },
     "production": {
-      "android": {},
+      "distribution": "store",
       "ios": {}
     }
   }

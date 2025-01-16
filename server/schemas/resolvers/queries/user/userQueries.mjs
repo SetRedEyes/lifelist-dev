@@ -58,8 +58,8 @@ export const getUserProfileById = async (
         _id: foundUser._id,
         fullName: foundUser.fullName,
         username: foundUser.username,
-        bio: null,
-        profilePicture: null,
+        bio: foundUser.bio,
+        profilePicture: foundUser.profilePicture,
         followersCount: null,
         followingCount: null,
         collagesCount: null,
@@ -77,8 +77,8 @@ export const getUserProfileById = async (
         _id: foundUser._id,
         fullName: foundUser.fullName,
         username: foundUser.username,
-        bio: null,
-        profilePicture: null,
+        bio: foundUser.bio,
+        profilePicture: foundUser.profilePicture,
         followersCount: foundUser.followers.length,
         followingCount: foundUser.following.length,
         collagesCount: foundUser.collages.length,
@@ -539,7 +539,7 @@ export const getUserData = async (_, __, { user }) => {
   };
 };
 
-export const getAllUsers = async (
+/* export const getAllUsers = async (
   _,
   { limit = 12, cursor, searchQuery },
   { user: currentUser }
@@ -551,26 +551,25 @@ export const getAllUsers = async (
     const query = {
       ...(cursor ? { _id: { $gt: cursor } } : {}),
       ...(searchQuery
-        ? {
-            username: { $regex: searchQuery, $options: "i" }, // Case-insensitive search
-          }
+        ? { username: { $regex: searchQuery, $options: "i" } } // Case-insensitive search
         : {}),
     };
 
+    // Fetch users with pagination and search
     const users = await User.find(query)
-      .sort({ _id: 1 }) // Ensure consistent ordering for pagination
-      .limit(limit + 1) // Fetch one extra user to check for next page
+      .sort({ _id: 1 }) // Consistent ordering for pagination
+      .limit(limit + 1) // Fetch one extra user to check for the next page
       .select(
         "_id fullName email phoneNumber username profilePicture settings followRequests"
       )
-      .populate("settings") // Populate settings for privacy info
+      .populate("settings") // Privacy info
       .exec();
 
     // Map users to include relationship status
     const usersWithStatus = users.map((user) => {
       const isFollowing = currentUser.following?.includes(user._id) || false;
-      const hasSentRequest = Array.isArray(user.followRequests)
-        ? user.followRequests.some(
+      const hasSentRequest = Array.isArray(user.pendingFriendRequests)
+        ? user.pendingFriendRequests.some(
             (req) => req.toString() === currentUser._id.toString()
           )
         : false;
@@ -587,18 +586,108 @@ export const getAllUsers = async (
       };
     });
 
-    // Check for next page
+    // Check if there are more users to load
     const hasNextPage = usersWithStatus.length > limit;
-    if (hasNextPage) usersWithStatus.pop(); // Remove extra user
+    if (hasNextPage) usersWithStatus.pop(); // Remove the extra user
+
+    // Ensure nextCursor is valid and does not cause an infinite loop
+    const nextCursor = hasNextPage
+      ? usersWithStatus[usersWithStatus.length - 1]?.user?._id
+      : null;
+
+    if (nextCursor === cursor) {
+      // Prevent infinite loop by returning null if the cursor hasn't advanced
+      return {
+        users: usersWithStatus,
+        nextCursor: null,
+        hasNextPage: false,
+      };
+    }
 
     return {
       users: usersWithStatus,
-      nextCursor: hasNextPage
-        ? usersWithStatus[usersWithStatus.length - 1].user._id
-        : null,
+      nextCursor,
       hasNextPage,
     };
   } catch (error) {
+    console.error("Error in getAllUsers:", error);
+    throw new Error("Failed to fetch users");
+  }
+};
+ */
+
+export const getAllUsers = async (
+  _,
+  { limit = 12, cursor, searchQuery },
+  { user }
+) => {
+  try {
+    if (!user) throw new Error("Unauthorized.");
+
+    // Cursor-based pagination and search query
+    const query = {
+      ...(cursor ? { _id: { $gt: cursor } } : {}),
+      ...(searchQuery
+        ? { username: { $regex: searchQuery, $options: "i" } } // Case-insensitive search
+        : {}),
+    };
+
+    // Fetch users with pagination and search
+    const users = await User.find(query)
+      .sort({ _id: 1 }) // Consistent ordering for pagination
+      .limit(limit + 1) // Fetch one extra user to check for the next page
+      .select(
+        "_id fullName email phoneNumber username profilePicture settings followRequests"
+      )
+      .populate("settings") // Privacy info
+      .exec();
+
+    // Map users to include relationship status
+    const usersWithStatus = users.map((otherUser) => {
+      const isFollowing = user.following?.includes(otherUser._id) || false;
+      const hasSentRequest = Array.isArray(otherUser.pendingFriendRequests)
+        ? otherUser.pendingFriendRequests.some(
+            (req) => req.toString() === user._id.toString()
+          )
+        : false;
+
+      return {
+        user: otherUser,
+        relationshipStatus: isFollowing
+          ? "Following"
+          : hasSentRequest
+          ? "Requested"
+          : "Follow",
+        isPrivate: otherUser.settings?.isProfilePrivate || false,
+        hasSentFollowRequest: hasSentRequest,
+      };
+    });
+
+    // Check if there are more users to load
+    const hasNextPage = usersWithStatus.length > limit;
+    if (hasNextPage) usersWithStatus.pop(); // Remove the extra user
+
+    // Ensure nextCursor is valid and does not cause an infinite loop
+    const nextCursor = hasNextPage
+      ? usersWithStatus[usersWithStatus.length - 1]?.user?._id
+      : null;
+
+    if (nextCursor === cursor) {
+      // Prevent infinite loop by returning null if the cursor hasn't advanced
+      return {
+        users: usersWithStatus,
+        nextCursor: null,
+        hasNextPage: false,
+      };
+    }
+
+    return {
+      users: usersWithStatus,
+      nextCursor,
+      hasNextPage,
+    };
+  } catch (error) {
+    console.error("Error in getAllUsers:", error);
     throw new Error("Failed to fetch users");
   }
 };

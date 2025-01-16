@@ -1,21 +1,19 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   FlatList,
   StyleSheet,
-  Text,
   RefreshControl,
   Dimensions,
 } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; // For safe area insets
-import { useLazyQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client";
 import { GET_MAIN_FEED } from "../../utils/queries/mainFeedQueries";
+import CollageMainFeedDisplay from "../../displays/CollageMainFeedDisplay";
 import ButtonIcon from "../../icons/ButtonIcon";
 import { useAuth } from "../../contexts/AuthContext";
-import CollageDisplay from "../../displays/CollageDisplay";
 import { symbolStyles } from "../../styles/components/symbolStyles";
 import { Image } from "expo-image";
 import { headerStyles } from "../../styles/components/headerStyles";
@@ -23,27 +21,26 @@ import { layoutStyles } from "../../styles/components";
 
 const { height: screenHeight } = Dimensions.get("window");
 
-export default function MainFeed({ route }) {
+export default function MainFeed() {
   const navigation = useNavigation();
   const { currentUser } = useAuth();
-  const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const headerHeight = useHeaderHeight();
-
-  const [collages, setCollages] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   // Calculate dynamic collage height
   const collageHeight = screenHeight - headerHeight - tabBarHeight;
 
-  const [fetchMainFeed, { loading, error, data, fetchMore }] = useLazyQuery(
-    GET_MAIN_FEED,
-    {
-      fetchPolicy: "cache-and-network",
-    }
-  );
+  // State for refreshing
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Main feed query
+  const { data, loading, error, fetchMore, refetch } = useQuery(GET_MAIN_FEED, {
+    variables: { limit: 10 },
+  });
+
+  const collages = data?.getMainFeed?.collages || [];
+  const hasNextPage = data?.getMainFeed?.hasNextPage || false;
+  const nextCursor = data?.getMainFeed?.nextCursor || null;
 
   // Configure the header options
   useEffect(() => {
@@ -86,75 +83,53 @@ export default function MainFeed({ route }) {
     });
   }, [navigation]);
 
-  // Fetch the initial feed data
-  useEffect(() => {
-    if (currentUser) {
-      fetchMainFeed({ variables: { userId: currentUser, page } });
-    }
-  }, [currentUser, page]);
+  // Handle load more
+  const handleLoadMore = useCallback(() => {
+    if (!hasNextPage || !nextCursor) return;
 
-  // Update collages when new data is fetched
-  useEffect(() => {
-    if (data) {
-      setCollages(data.getMainFeed.collages);
-      setHasMore(data.getMainFeed.hasMore);
-    }
-  }, [data]);
+    fetchMore({
+      variables: { cursor: nextCursor, limit: 10 },
+      updateQuery: (prev, { fetchMoreResult }) => {
+        if (!fetchMoreResult) return prev;
 
-  // Handle pull-to-refresh
-  const handleRefresh = () => {
-    setRefreshing(true);
-    fetchMainFeed({
-      variables: { userId: currentUser, page: 1 },
-      onCompleted: () => setRefreshing(false),
+        return {
+          getMainFeed: {
+            ...fetchMoreResult.getMainFeed,
+            collages: [
+              ...prev.getMainFeed.collages,
+              ...fetchMoreResult.getMainFeed.collages,
+            ],
+          },
+        };
+      },
     });
-  };
+  }, [fetchMore, hasNextPage, nextCursor]);
 
-  // Load more collages when reaching the end of the list
-  const handleLoadMore = () => {
-    if (hasMore && !loading) {
-      fetchMore({
-        variables: { userId: currentUser, page: page + 1 },
-        updateQuery: (prevResult, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return prevResult;
-          setPage(page + 1);
-          setHasMore(fetchMoreResult.getMainFeed.hasMore);
-          return {
-            getMainFeed: {
-              __typename: prevResult.getMainFeed.__typename,
-              collages: [
-                ...prevResult.getMainFeed.collages,
-                ...fetchMoreResult.getMainFeed.collages,
-              ],
-              hasMore: fetchMoreResult.getMainFeed.hasMore,
-            },
-          };
-        },
-      });
-    }
-  };
+  // Handle refresh
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
-  // Refresh feed when coming back from other screens
-  useFocusEffect(
-    useCallback(() => {
-      if (route.params?.refresh) {
-        handleRefresh();
-        navigation.setParams({ refresh: false });
-      }
-    }, [route.params?.refresh])
-  );
-
+  // Render collage item
   const renderCollage = useCallback(
     ({ item, index }) => (
       <View style={{ height: collageHeight }}>
-        <CollageDisplay collageId={item._id} index={index} />
+        <CollageMainFeedDisplay
+          collage={item}
+          hasParticipants={item.hasParticipants}
+          isAuthor={currentUser._id === item.author._id}
+          collages={collages}
+          currentIndex={index}
+        />
       </View>
     ),
-    [collageHeight]
+    [collageHeight, currentUser._id, collages]
   );
 
-  if (error) {
-    return <Text>Error: {error.message}</Text>;
+  if (loading && !data) {
+    return <View style={layoutStyles.wrapper} />;
   }
 
   return (
@@ -162,7 +137,7 @@ export default function MainFeed({ route }) {
       <FlatList
         data={collages}
         renderItem={renderCollage}
-        keyExtractor={(item) => item._id.toString()}
+        keyExtractor={(item) => item._id}
         pagingEnabled
         showsVerticalScrollIndicator={false}
         snapToAlignment="start"
@@ -187,20 +162,5 @@ export default function MainFeed({ route }) {
 const styles = StyleSheet.create({
   flatListContent: {
     flexGrow: 1,
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    width: "100%",
-    height: 80,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-  },
-  overlayText: {
-    color: "white",
-    marginTop: 8,
-    fontSize: 16,
   },
 });

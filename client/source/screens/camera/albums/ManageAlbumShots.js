@@ -25,12 +25,7 @@ export default function ManageAlbumShots() {
   const navigation = useNavigation();
   const { albumId, associatedShots } = route.params;
 
-  const {
-    shots,
-    loadNextPage,
-    initializeCameraRollCache,
-    isCameraRollCacheInitialized,
-  } = useCameraRoll();
+  const { shots, loadNextPage, hasNextPage } = useCameraRoll();
   const { updateAlbumShotsInCache } = useCameraAlbums();
 
   const [selectedShots, setSelectedShots] = useState([]);
@@ -38,11 +33,17 @@ export default function ManageAlbumShots() {
   const [isAlertVisible, setIsAlertVisible] = useState(false);
   const [title, setTitle] = useState("Manage Album Shots");
 
+  // Run loadNextPage on mount to fetch the initial data
   useEffect(() => {
-    if (!isCameraRollCacheInitialized) {
-      initializeCameraRollCache();
-    }
-  }, [isCameraRollCacheInitialized, initializeCameraRollCache]);
+    const fetchInitialShots = async () => {
+      try {
+        await loadNextPage();
+      } catch (error) {
+        console.error("Error loading initial shots:", error);
+      }
+    };
+    fetchInitialShots();
+  }, [loadNextPage]);
 
   useEffect(() => {
     if (associatedShots) {
@@ -136,17 +137,10 @@ export default function ManageAlbumShots() {
   };
 
   const handleEndReached = () => {
-    loadNextPage();
+    if (hasNextPage) {
+      loadNextPage();
+    }
   };
-
-  if (!isCameraRollCacheInitialized) {
-    return (
-      <View style={containerStyles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6AB952" />
-        <Text style={containerStyles.loadingText}>Loading Camera Roll...</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={layoutStyles.wrapper}>
@@ -165,6 +159,9 @@ export default function ManageAlbumShots() {
         columnWrapperStyle={styles.columnWrapper}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          hasNextPage && <ActivityIndicator size="small" color="#6AB952" />
+        }
       />
       <DangerAlert
         visible={isAlertVisible}
@@ -182,7 +179,7 @@ export default function ManageAlbumShots() {
 
 const styles = StyleSheet.create({
   columnWrapper: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     marginHorizontal: 0,
   },
 });

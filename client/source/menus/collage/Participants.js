@@ -37,7 +37,11 @@ export default function Participants({
       onRequestClose={onRequestClose}
       initialHeight={Dimensions.get("window").height * 0.6}
       draggableHeader={
-        <Text style={menuStyles.draggableHeader}>Participants</Text>
+        <Text
+          style={[menuStyles.draggableHeader, { borderBottomColor: "#252525" }]}
+        >
+          Participants
+        </Text>
       }
     >
       <View style={menuStyles.nonDraggableContent}>

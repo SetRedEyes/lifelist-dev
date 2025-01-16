@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -23,9 +23,14 @@ export default function EditOverview() {
 
   const { caption, coverImage, images } = collage;
   const currentCoverImage = coverImage || images[0]?.imageThumbnail || null;
+  const [captionText, setCaptionText] = useState(caption || "");
+  const maxCharacters = 125;
 
   const handleCaptionChange = (text) => {
-    updateCollage({ caption: text });
+    if (text.length <= maxCharacters) {
+      setCaptionText(text);
+      updateCollage({ caption: text });
+    }
   };
 
   const handleNextPage = () => {
@@ -103,13 +108,19 @@ export default function EditOverview() {
 
         {/* Caption Input */}
         <View style={formStyles.inputWrapper}>
-          <Text style={formStyles.label}>Caption</Text>
+          <View style={styles.labelRow}>
+            <Text style={formStyles.label}>Caption</Text>
+            <Text style={styles.charCount}>
+              {maxCharacters - captionText.length}
+            </Text>
+          </View>
           <TextInput
             style={formStyles.input}
             onChangeText={handleCaptionChange}
-            value={caption}
+            value={captionText}
             placeholder="Enter your caption"
             placeholderTextColor="#d4d4d4"
+            maxLength={maxCharacters}
           />
         </View>
 
@@ -143,30 +154,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     paddingTop: 60,
   },
-  bottomButtonContainer: {
-    marginTop: 32,
-    justifyContent: "center",
+  labelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  inputWrapper: {
-    width: "94%",
-    marginBottom: 16,
-    alignSelf: "center",
-  },
-  label: {
-    color: "#fff",
-    fontWeight: "500",
-    marginBottom: 8,
-    textAlign: "left",
-  },
-  input: {
-    backgroundColor: "#252525",
-    color: "#fff",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#1c1c1c",
-    width: "100%",
+  charCount: {
+    color: "#696969",
+    fontSize: 12,
+    marginRight: 8,
   },
 });

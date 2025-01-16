@@ -10,6 +10,7 @@ import {
   Keyboard,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import auth from "@react-native-firebase/auth";
 import ButtonIcon from "../../icons/ButtonIcon";
 import AuthenticationButton from "../../buttons/AuthenticationButton";
 import {
@@ -22,8 +23,11 @@ import { useCreateProfileContext } from "../../contexts/CreateProfileContext";
 export default function VerifyAccount() {
   const { profile, updateProfile } = useCreateProfileContext();
   const navigation = useNavigation();
-  const route = useRoute(); // Get the navigation params
-  const { confirmationResult } = route.params; // Destructure confirmationResult
+  const route = useRoute();
+
+  // Get the verificationId from the SignUp screen
+  const verificationId = route.params?.verificationId;
+
   const codeLength = 6;
   const inputs = Array(codeLength)
     .fill(0)
@@ -44,23 +48,43 @@ export default function VerifyAccount() {
     }
   };
 
-  // Verify the code and update the profile
+  // Verify the OTP with Firebase Auth
   const handleVerification = async () => {
     try {
       const verificationCode = code.join(""); // Combine the code digits
 
-      // Confirm the code using Firebase Auth
-      await confirmationResult.confirm(verificationCode);
+      // Use Firebase to verify the OTP
+      const credential = auth.PhoneAuthProvider.credential(
+        verificationId,
+        verificationCode
+      );
+      await auth().signInWithCredential(credential);
 
       // Update the phone number in the profile
       updateProfile("phoneNumber", profile.phoneNumber);
 
       // Navigate to the next screen
-      navigation.navigate("SetLoginInformation");
       Alert.alert("Success", "Your phone number has been verified!");
+      navigation.navigate("SetLoginInformation");
     } catch (error) {
       Alert.alert("Error", "Invalid verification code. Please try again.");
       console.error("Verification Error:", error);
+    }
+  };
+
+  // Resend Verification Code
+  const resendVerificationCode = async () => {
+    try {
+      const confirmation = await auth().signInWithPhoneNumber(
+        profile.phoneNumber
+      );
+      Alert.alert("Verification Code Resent", "Please check your phone.");
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        "Failed to resend verification code. Please try again."
+      );
+      console.error("Resend Error:", error);
     }
   };
 
@@ -116,6 +140,8 @@ export default function VerifyAccount() {
           We sent you a 6-digit code to {profile?.phoneNumber}. Enter the code
           below to confirm your phone number.
         </Text>
+
+        {/* OTP Inputs */}
         <View style={styles.codeContainer}>
           {code.map((digit, index) => (
             <TextInput
@@ -131,12 +157,13 @@ export default function VerifyAccount() {
           ))}
         </View>
 
+        {/* Authentication Button */}
         <AuthenticationButton
           backgroundColor={isValid ? "#6AB95230" : "#1c1c1c"}
           borderColor={isValid ? "#6AB95250" : "#1c1c1c"}
           textColor={isValid ? "#6AB952" : "#696969"}
           width="85%"
-          text={isValid ? "Verify Phone Number" : "Enter Code"}
+          text="Verify Phone Number"
           onPress={isValid ? handleVerification : null}
         />
       </View>
@@ -144,7 +171,7 @@ export default function VerifyAccount() {
       {/* Resend Verification */}
       <View style={styles.footerTextContainer}>
         <Text style={styles.smallText}>Didn’t receive our code?</Text>
-        <Pressable onPress={() => Alert.alert("Verification Code Resent")}>
+        <Pressable onPress={resendVerificationCode}>
           <Text style={[styles.smallText, styles.resendText]}>
             Resend Verification
           </Text>

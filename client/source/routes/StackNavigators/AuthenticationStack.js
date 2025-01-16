@@ -7,8 +7,6 @@ import SetLoginInformation from "../../screens/authentication/SetLoginInformatio
 import SetPermissions from "../../screens/authentication/SetPermissions";
 import SetProfileInformation from "../../screens/authentication/SetProfileInformation";
 import SetProfilePicture from "../../screens/authentication/SetProfilePicture";
-import SignUp from "../../screens/authentication/SignUp";
-import VerifyAccount from "../../screens/authentication/VerifyAccount";
 
 // Onboarding Screens
 import WelcomeOnboarding from "../../screens/onboarding/WelcomeOnboarding";
@@ -32,11 +30,11 @@ export default function AuthenticationStack({ initialRouteName = "SignUp" }) {
         component={Login}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="SignUp"
         component={SignUp}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen
         name="ForgotPassword"
         component={ForgotPassword}
@@ -98,7 +96,7 @@ export default function AuthenticationStack({ initialRouteName = "SignUp" }) {
           },
         }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="VerifyAccount"
         component={VerifyAccount}
         options={{
@@ -111,7 +109,7 @@ export default function AuthenticationStack({ initialRouteName = "SignUp" }) {
             backgroundColor: "#121212",
           },
         }}
-      />
+      /> */}
 
       {/* Onboarding Screens */}
       <Stack.Screen

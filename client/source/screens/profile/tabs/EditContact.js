@@ -18,6 +18,8 @@ import DangerAlert from "../../../alerts/DangerAlert";
 import { useMutation } from "@apollo/client";
 import { UPDATE_PASSWORD } from "../../../utils/mutations/userActionMutations";
 import AuthenticationButton from "../../../buttons/AuthenticationButton";
+import Icon from "../../../icons/Icon";
+import { symbolStyles } from "../../../styles/components/symbolStyles";
 
 export default function EditContact() {
   const navigation = useNavigation();
@@ -131,29 +133,59 @@ export default function EditContact() {
           {/* Email */}
           <View style={formStyles.inputWrapper}>
             <Text style={formStyles.label}>Email</Text>
-            <TextInput
-              value={adminProfile?.email || ""}
-              editable={!adminProfile?.email}
-              style={[formStyles.input, formStyles.disabledInput]}
-              placeholder="Enter your email"
-              placeholderTextColor="#d4d4d4"
-            />
+            <View style={{ position: "relative" }}>
+              <TextInput
+                value={adminProfile?.email || ""}
+                editable={!adminProfile?.email}
+                style={[
+                  formStyles.input,
+                  adminProfile?.email && formStyles.disabledInput,
+                ]}
+                placeholder="Enter your email"
+                placeholderTextColor="#d4d4d4"
+              />
+              {adminProfile?.email && (
+                <View style={formStyles.lockIcon}>
+                  <Icon
+                    name={"lock"}
+                    weight="semibold"
+                    tintColor="#696969"
+                    style={symbolStyles.lock}
+                  />
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Phone */}
           <View style={formStyles.inputWrapper}>
             <Text style={formStyles.label}>Phone</Text>
-            <TextInput
-              value={
-                adminProfile?.phoneNumber
-                  ? formatPhoneNumber(adminProfile.phoneNumber)
-                  : ""
-              }
-              editable={!adminProfile?.phoneNumber}
-              style={[formStyles.input, formStyles.disabledInput]}
-              placeholder="Enter your phone number"
-              placeholderTextColor="#d4d4d4"
-            />
+            <View style={{ position: "relative" }}>
+              <TextInput
+                value={
+                  adminProfile?.phoneNumber
+                    ? formatPhoneNumber(adminProfile.phoneNumber)
+                    : ""
+                }
+                editable={!adminProfile?.phoneNumber}
+                style={[
+                  formStyles.input,
+                  adminProfile?.phoneNumber && formStyles.disabledInput,
+                ]}
+                placeholder="Enter your phone number"
+                placeholderTextColor="#d4d4d4"
+              />
+              {adminProfile?.phoneNumber && (
+                <View style={formStyles.lockIcon}>
+                  <Icon
+                    name={"lock"}
+                    weight="semibold"
+                    tintColor="#696969"
+                    style={symbolStyles.lock}
+                  />
+                </View>
+              )}
+            </View>
           </View>
 
           <Text style={[editProfileStyles.header, { marginTop: 16 }]}>
@@ -205,8 +237,8 @@ export default function EditContact() {
             borderColor={isModified ? "#6AB95250" : "#1c1c1c"}
             textColor={isModified ? "#6AB952" : "#696969"}
             width="100%"
-            text="Update Password"
-            onPress={isModified ? handleSaveChanges : null}
+            text={loading ? "Saving..." : "Update Password"}
+            onPress={isModified && !loading ? handleSaveChanges : null}
             disabled={!isModified || loading}
           />
 

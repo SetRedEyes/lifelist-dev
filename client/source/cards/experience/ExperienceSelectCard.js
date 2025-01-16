@@ -112,6 +112,7 @@ export default function ExperienceSelectCard({
               text={isShotAdded ? "Added" : "Add"}
               textColor={getTextColor()}
               onPress={handleActionPress}
+              backgroundColor={"#252525"}
             />
           </View>
         </View>

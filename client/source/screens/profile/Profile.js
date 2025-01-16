@@ -45,6 +45,8 @@ export default function Profile() {
     hasNextRepostsPage,
   } = useProfile();
 
+  console.log(profileData);
+
   const userId = route.params?.userId || currentUser;
   const isAdminView = currentUser && userId === currentUser;
 

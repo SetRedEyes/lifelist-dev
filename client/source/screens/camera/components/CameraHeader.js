@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { Text, Animated, Pressable, StyleSheet } from "react-native";
 import Icon from "../../../icons/Icon";
 import { symbolStyles } from "../../../styles/components/symbolStyles";
@@ -49,5 +49,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#ffffff",
     fontSize: 16,
+    marginRight: 3,
   },
 });

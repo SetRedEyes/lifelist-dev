@@ -14,7 +14,6 @@ const collageSchema = new Schema({
   },
   caption: {
     type: String,
-    maxlength: 75,
   },
   images: {
     type: [

@@ -43,4 +43,15 @@ export const formStyles = StyleSheet.create({
   inputText: {
     color: "#fff",
   },
+  lockIcon: {
+    position: "absolute",
+    right: 12,
+    top: "50%",
+    transform: [{ translateY: -8 }],
+    height: 16,
+    width: 11.14,
+  },
+  disabledInput: {
+    color: "#696969",
+  },
 });

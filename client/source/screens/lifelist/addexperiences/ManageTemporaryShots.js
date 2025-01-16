@@ -11,14 +11,8 @@ import DangerAlert from "../../../alerts/DangerAlert";
 export default function ManageTemporaryShots() {
   const route = useRoute();
   const navigation = useNavigation();
-  const { lifeListExperiences, updateLifeListExperience } =
-    useAddExperiencesContext();
-  const {
-    shots,
-    loadNextPage,
-    initializeCameraRollCache,
-    isCameraRollCacheInitialized,
-  } = useCameraRoll();
+  const { updateLifeListExperience } = useAddExperiencesContext();
+  const { shots, loadNextPage, hasNextPage } = useCameraRoll();
 
   const { experienceId, associatedShots } = route.params;
 
@@ -26,13 +20,6 @@ export default function ManageTemporaryShots() {
   const [isModified, setIsModified] = useState(false);
   const [isAlertVisible, setIsAlertVisible] = useState(false);
   const [title, setTitle] = useState("Manage Shots");
-
-  // Initialize camera roll cache if not already done
-  useEffect(() => {
-    if (!isCameraRollCacheInitialized) {
-      initializeCameraRollCache();
-    }
-  }, [isCameraRollCacheInitialized, initializeCameraRollCache]);
 
   // Initialize selected shots and title based on associated shots
   useEffect(() => {
@@ -52,6 +39,21 @@ export default function ManageTemporaryShots() {
         )
     );
   }, [selectedShots, associatedShots]);
+
+  // Fetch initial shots when the component loads
+  useEffect(() => {
+    const fetchInitialShots = async () => {
+      try {
+        await loadNextPage();
+      } catch (error) {
+        console.error(
+          "[ManageTemporaryShots] Error loading initial shots:",
+          error
+        );
+      }
+    };
+    fetchInitialShots();
+  }, [loadNextPage]);
 
   // Update navigation options with title and buttons
   useEffect(() => {
@@ -139,16 +141,10 @@ export default function ManageTemporaryShots() {
 
   // Load more shots when the end of the list is reached
   const handleEndReached = () => {
-    loadNextPage();
+    if (hasNextPage) {
+      loadNextPage();
+    }
   };
-
-  if (!isCameraRollCacheInitialized) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading Camera Roll...</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#121212" }}>

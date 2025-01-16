@@ -71,8 +71,6 @@ export default function TagUsers() {
     setHasModified(true);
   };
 
-  console.log("selectedUsers:", selectedUsers);
-
   // Save tagged users to the context and navigate back
   const handleSaveTaggedUsers = () => {
     if (hasModified) {
@@ -87,12 +85,14 @@ export default function TagUsers() {
       headerShown: true,
       header: () => (
         <View style={headerStyles.headerContainer}>
-          <ButtonIcon
-            name="chevron.backward"
-            weight="medium"
-            onPress={() => navigation.goBack()}
-            style={symbolStyles.backArrow}
-          />
+          <View style={{ marginLeft: 16 }}>
+            <ButtonIcon
+              name="chevron.backward"
+              weight="medium"
+              onPress={() => navigation.goBack()}
+              style={symbolStyles.backArrow}
+            />
+          </View>
           <View
             style={[headerStyles.searchBarContainer, { marginHorizontal: 16 }]}
           >
@@ -102,7 +102,11 @@ export default function TagUsers() {
               onFocusChange={setIsSearchFocused}
             />
           </View>
-          <Pressable onPress={handleSaveTaggedUsers} disabled={!hasModified}>
+          <Pressable
+            onPress={handleSaveTaggedUsers}
+            disabled={!hasModified}
+            style={{ marginRight: 16 }}
+          >
             <Text
               style={[
                 headerStyles.saveButtonText,

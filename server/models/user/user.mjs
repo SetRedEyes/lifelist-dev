@@ -52,6 +52,15 @@ const userSchema = new Schema({
       "Phone number must be exactly 10 digits without any symbols or spaces.",
     ],
   },
+  /* phoneNumber: {
+  type: String,
+  trim: true,
+  match: [
+    /^\+?[1-9]\d{1,14}$/,
+    "Phone number must be in E.164 format (e.g., +15551234567).",
+  ],
+  required: true,
+}, */
 
   // Authentication
   password: {

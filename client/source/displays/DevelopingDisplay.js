@@ -31,17 +31,10 @@ export default function DevelopingDisplay() {
   const navigation = useNavigation();
   const route = useRoute();
   const { shot } = route.params;
-  console.log(shot);
 
   const { developingShots, removeShot } = useDevelopingRoll();
   const { addMoment } = useAdminProfile();
-  const {
-    isCameraRollCacheInitialized,
-    initializeCameraRollCache,
-    addShotToRoll,
-    removeShotFromRoll,
-    shots,
-  } = useCameraRoll();
+  const { addShotToRoll, removeShotFromRoll, shots } = useCameraRoll();
 
   // Apollo Mutation for transferring the shot
   const [transferCameraShot] = useMutation(TRANSFER_CAMERA_SHOT);
@@ -137,10 +130,6 @@ export default function DevelopingDisplay() {
   useEffect(() => {
     const transferShot = async () => {
       try {
-        if (!isCameraRollCacheInitialized) {
-          await initializeCameraRollCache();
-        }
-
         // Check if the shot already exists in Camera Roll
         const existingShot = shots.find((s) => s._id === shot._id);
         if (existingShot) return; // Prevent duplicate transfers
@@ -256,7 +245,7 @@ export default function DevelopingDisplay() {
       >
         <CameraShotDisplay
           shotId={shot._id}
-          imageUrl={shot.image || shot.imageThumbnail}
+          imageUrl={shot.image}
           developingImage={true}
         />
       </Animated.View>

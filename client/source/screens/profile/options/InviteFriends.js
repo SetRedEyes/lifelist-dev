@@ -14,13 +14,19 @@ export default function InviteFriends() {
   useEffect(() => {
     (async () => {
       const { status } = await Contacts.requestPermissionsAsync();
-      if (status === "granted") {
-        const { data } = await Contacts.getContactsAsync({
-          fields: [Contacts.Fields.PhoneNumbers],
-        });
-        if (data.length > 0) {
-          setContacts(data);
-        }
+      if (status !== "granted") {
+        console.warn("Contacts permission denied.");
+        return;
+      }
+
+      const { data } = await Contacts.getContactsAsync({
+        fields: [Contacts.Fields.PhoneNumbers],
+      });
+
+      if (data.length > 0) {
+        // Filter out contacts with no phone numbers
+        const validContacts = data.filter((contact) => contact.phoneNumbers);
+        setContacts(validContacts);
       }
     })();
   }, []);
@@ -28,11 +34,10 @@ export default function InviteFriends() {
   // Filter contacts based on search query
   const filteredContacts = contacts.filter(
     (contact) =>
-      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (contact.phoneNumbers &&
-        contact.phoneNumbers.some((pn) =>
-          pn.number.includes(searchQuery.toLowerCase())
-        ))
+      contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      contact.phoneNumbers?.some((pn) =>
+        pn.number.replace(/\D/g, "").includes(searchQuery.replace(/\D/g, ""))
+      )
   );
 
   // Render each invite card
@@ -55,19 +60,21 @@ export default function InviteFriends() {
       style={[layoutStyles.wrapper, { paddingTop: 16, paddingHorizontal: 8 }]}
     >
       {/* Search Bar */}
-      <SearchBar
-        ref={searchBarRef}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        handleSearch={handleSearch}
-        onFocusChange={handleFocusChange}
-      />
+      <View style={{ paddingBottom: 8 }}>
+        <SearchBar
+          ref={searchBarRef}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          handleSearch={handleSearch}
+          onFocusChange={handleFocusChange}
+        />
+      </View>
 
       {/* Contacts List */}
       <FlatList
         data={filteredContacts}
         renderItem={renderInviteFriendItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id || item.recordID}
         style={layoutStyles.listContainer}
       />
 

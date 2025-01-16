@@ -2,26 +2,21 @@ import { User, CameraShot, CameraAlbum } from "../../../../models/index.mjs";
 import { isUser } from "../../../../utils/auth.mjs";
 
 export const getAllCameraAlbums = async (_, __, { user }) => {
-  isUser(user);
+  isUser(user); // Ensure the user is authenticated
 
-  const currentUser = await User.findById(user).exec();
-  if (!currentUser) throw new Error("User not found.");
-
-  const albums = await CameraAlbum.find({ author: currentUser })
+  const albums = await CameraAlbum.find({ author: user })
     .select("_id title coverImage shotsCount")
-    .populate("shots", "_id") // Populate the shots field with only the _id
+    .populate("shots", "_id") // Populate only the _id of the shots
     .exec();
 
-  // Transform the albums to include the array of shot IDs
-  const transformedAlbums = albums.map((album) => ({
+  // Transform the albums to include an array of shot IDs
+  return albums.map((album) => ({
     _id: album._id,
     title: album.title,
     coverImage: album.coverImage,
     shotsCount: album.shotsCount,
-    shots: album.shots.map((shot) => ({ _id: shot._id })), // Map to an array of IDs
+    shots: album.shots.map((shot) => shot._id), // Extract only the _id
   }));
-
-  return transformedAlbums;
 };
 
 export const getCameraAlbum = async (_, { albumId, cursor, limit = 12 }) => {
@@ -30,11 +25,11 @@ export const getCameraAlbum = async (_, { albumId, cursor, limit = 12 }) => {
     .populate({
       path: "shots",
       match: {
-        ...(cursor && { _id: { $gt: cursor } }), // Apply cursor filter if provided
+        ...(cursor && { capturedAt: { $lt: new Date(cursor) } }), // Apply cursor filter based on `capturedAt`
       },
       options: {
-        sort: { _id: 1 }, // Sort by _id in ascending order
-        limit: limit + 1, // Fetch one extra record to determine hasNextPage
+        sort: { capturedAt: -1 }, // Sort by `capturedAt` in descending order
+        limit: limit + 1, // Fetch one extra record to determine `hasNextPage`
       },
       select: "_id capturedAt imageThumbnail", // Select only required fields
     })
@@ -55,64 +50,68 @@ export const getCameraAlbum = async (_, { albumId, cursor, limit = 12 }) => {
       coverImage: cameraAlbum.coverImage,
     },
     shots,
-    nextCursor: hasNextPage ? shots[shots.length - 1]._id : null,
+    nextCursor: hasNextPage ? shots[shots.length - 1].capturedAt : null,
     hasNextPage,
   };
 };
 
 export const getAllCameraShots = async (
   _,
-  { cursor, limit = 12 },
+  { cursor, limit = 10 },
   { user }
 ) => {
-  isUser(user); // Ensure the user is authenticated
+  if (!user) {
+    throw new Error("Unauthorized: User ID is required to fetch camera shots.");
+  }
 
-  // Fetch the user and populate the camera shots
-  const currentUser = await User.findById(user)
-    .populate({
-      path: "cameraShots",
-      match: {
-        ...(cursor && { _id: { $gt: cursor } }), // Apply cursor filter if provided
-      },
-      options: {
-        sort: { _id: 1 }, // Sort by _id in ascending order
-        limit: limit + 1, // Fetch one extra record to check for the next page
-      },
-      select: "_id capturedAt image imageThumbnail", // Select only required fields
-    })
-    .exec();
+  try {
+    const userWithShots = await User.findById(user)
+      .select("cameraShots")
+      .populate({
+        path: "cameraShots",
+        match: cursor ? { capturedAt: { $lt: new Date(cursor) } } : {},
+        options: {
+          sort: { capturedAt: -1 },
+          limit: limit + 1,
+        },
+        select: "_id capturedAt image imageThumbnail",
+      });
 
-  if (!currentUser) throw new Error("User not found.");
+    if (!userWithShots) {
+      throw new Error("User not found.");
+    }
 
-  const cameraShots = currentUser.cameraShots;
+    // Remove duplicates by creating a unique set of `_id`
+    const uniqueShots = Array.from(
+      new Map(
+        userWithShots.cameraShots.map((shot) => [shot._id.toString(), shot])
+      ).values()
+    );
 
-  // Determine if there are more pages
-  const hasNextPage = cameraShots.length > limit;
-  if (hasNextPage) cameraShots.pop(); // Remove the extra record for pagination
+    const hasNextPage = uniqueShots.length > limit;
+    const shots = hasNextPage ? uniqueShots.slice(0, limit) : uniqueShots;
+    const nextCursor = hasNextPage
+      ? shots[shots.length - 1].capturedAt.toISOString()
+      : null;
 
-  return {
-    shots: cameraShots,
-    nextCursor: hasNextPage ? cameraShots[cameraShots.length - 1]._id : null,
-    hasNextPage,
-  };
+    return {
+      shots,
+      nextCursor,
+      hasNextPage,
+    };
+  } catch (error) {
+    console.error("[getAllCameraShots] Error fetching camera shots:", error);
+    throw new Error("Failed to fetch camera shots.");
+  }
 };
 
 export const getCameraShot = async (_, { shotId }) => {
-  try {
-    const cameraShot = await CameraShot.findById(
-      shotId,
-      "_id image capturedAt"
-    ).exec();
-
-    if (!cameraShot) {
-      throw new Error("Camera shot not found.");
-    }
-
-    return cameraShot;
-  } catch (error) {
-    console.error("Error fetching camera shot:", error);
-    throw new Error("Failed to fetch camera shot.");
-  }
+  const cameraShot = await CameraShot.findById(
+    shotId,
+    "_id image capturedAt"
+  ).exec();
+  if (!cameraShot) throw new Error("Camera shot not found.");
+  return cameraShot;
 };
 
 export const getDevelopingCameraShots = async (_, __, { user }) => {
@@ -121,16 +120,15 @@ export const getDevelopingCameraShots = async (_, __, { user }) => {
   const currentUser = await User.findById(user)
     .populate({
       path: "developingCameraShots",
+      match: { transferredToRoll: false }, // Filter directly in the query
       select:
-        "_id image imageThumbnail capturedAt developingTime isDeveloped readyToReviewAt transferredToRoll",
+        "_id image imageThumbnail capturedAt developingTime isDeveloped readyToReviewAt",
     })
     .exec();
 
   if (!currentUser) throw new Error("User not found.");
 
-  return currentUser.developingCameraShots.filter(
-    (shot) => !shot.transferredToRoll
-  );
+  return currentUser.developingCameraShots;
 };
 
 export const getCameraShotsByImages = async (_, { images }) => {

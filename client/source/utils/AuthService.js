@@ -1,8 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import { decode as atob } from "base-64";
-import { signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "./firebaseConfig";
 
 global.atob = atob;
 
@@ -74,33 +72,35 @@ class AuthService {
       return false;
     }
   }
+}
 
-  // Send phone verification code
-  async sendVerificationCode(phoneNumber, recaptchaVerifier) {
+export default new AuthService();
+
+/* // Send phone verification code via AWS Cognito
+  async sendVerificationCode(phoneNumber) {
     try {
-      // Pass the reCAPTCHA verifier to `signInWithPhoneNumber`
-      const confirmationResult = await signInWithPhoneNumber(
-        auth,
-        phoneNumber,
-        recaptchaVerifier
-      );
-      return confirmationResult;
+      const result = await Auth.signUp({
+        username: phoneNumber,
+        password: "TemporaryPassword123!", // Cognito requires a password
+        attributes: {
+          phone_number: phoneNumber,
+        },
+      });
+      console.log("Verification code sent:", result);
+      return result;
     } catch (error) {
       console.error("Error sending verification code:", error);
       throw new Error(error.message);
     }
   }
 
-  // Confirm the verification code
-  async confirmVerificationCode(confirmationResult, verificationCode) {
+  // Confirm the phone verification code via AWS Cognito
+  async confirmVerificationCode(phoneNumber, code) {
     try {
-      await confirmationResult.confirm(verificationCode);
+      await Auth.confirmSignUp(phoneNumber, code);
       console.log("Phone number verified successfully!");
     } catch (error) {
       console.error("Error confirming verification code:", error);
       throw new Error(error.message);
     }
-  }
-}
-
-export default new AuthService();
+  } */

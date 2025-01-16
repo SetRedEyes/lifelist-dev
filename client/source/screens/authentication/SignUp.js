@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Text,
   View,
@@ -9,23 +9,20 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
-import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
-import { auth } from "../../utils/firebaseConfig"; // Ensure correct Firebase import
 import { formStyles } from "../../styles/components/formStyles";
 import authenticationStyles from "../../styles/screens/authenticationStyles";
 import { useCreateProfileContext } from "../../contexts/CreateProfileContext";
 import { VALIDATE_PHONE_NUMBER } from "../../utils/mutations/userAuthenticationMutations";
 import { useMutation } from "@apollo/client";
 import AuthenticationButton from "../../buttons/AuthenticationButton";
-import AuthService from "../../utils/AuthService";
+import auth from "@react-native-firebase/auth";
 
 export default function SignUp() {
-  const { resetProfile } = useCreateProfileContext();
+  const { resetProfile, updateProfile } = useCreateProfileContext();
   const [isValid, setIsValid] = useState(false);
   const [formattedPhoneNumber, setFormattedPhoneNumber] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [verificationId, setVerificationId] = useState(null);
   const navigation = useNavigation();
-  const recaptchaVerifier = useRef(null); // Ref for the reCAPTCHA modal
 
   // Mutation to validate phone number
   const [validatePhoneNumber, { loading }] = useMutation(VALIDATE_PHONE_NUMBER);
@@ -66,8 +63,10 @@ export default function SignUp() {
 
   // Handle sending the phone verification code
   const handleNextStep = async () => {
+    console.warn("🔥 Starting phone number verification process...");
     try {
       const cleanedPhoneNumber = formattedPhoneNumber.replace(/\D/g, "");
+      const fullPhoneNumber = `+1${cleanedPhoneNumber}`;
 
       // Step 1: Check if the phone number already exists in the database
       const { data } = await validatePhoneNumber({
@@ -79,42 +78,30 @@ export default function SignUp() {
         return;
       }
 
-      // Step 2: Send the verification code via Firebase Auth
-      const fullPhoneNumber = `+1${cleanedPhoneNumber}`;
+      // Step 2: Send OTP via Firebase
+      const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+      setVerificationId(confirmation.verificationId);
 
-      const confirmation = await AuthService.sendVerificationCode(
-        fullPhoneNumber,
-        recaptchaVerifier.current // Pass the reCAPTCHA verifier
-      );
+      // Step 3: Update profile with phone number
+      updateProfile("phoneNumber", fullPhoneNumber);
 
-      // Save the confirmation result in the state
-      setConfirmationResult(confirmation);
-
-      // Navigate to the VerifyAccount screen with the confirmation result
+      // Step 4: Navigate to VerifyAccount screen with verificationId
       navigation.navigate("VerifyAccount", {
-        confirmationResult: confirmation,
+        verificationId: confirmation.verificationId,
       });
     } catch (error) {
-      if (error.code === "auth/invalid-phone-number") {
-        Alert.alert(
-          "Invalid Phone Number",
-          "Please enter a valid phone number."
-        );
+      console.error("Firebase Auth Error:", JSON.stringify(error));
+
+      if (error.code) {
+        Alert.alert("Error", `${error.code}: ${error.message}`);
       } else {
         Alert.alert("Error", "Something went wrong. Please try again.");
       }
-      console.error("Error:", error);
     }
   };
 
   return (
     <Pressable style={authenticationStyles.wrapper} onPress={Keyboard.dismiss}>
-      {/* reCAPTCHA Verifier Modal */}
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={auth.app.options}
-      />
-
       <View style={authenticationStyles.container}>
         <View style={authenticationStyles.logoContainer}>
           <Image
@@ -149,7 +136,7 @@ export default function SignUp() {
           textColor={isValid ? "#6AB952" : "#696969"}
           width="85%"
           text={loading ? "Loading..." : "Create Account"}
-          onPress={isValid ? handleNextStep : null}
+          onPress={isValid && !loading ? handleNextStep : null}
         />
       </View>
 

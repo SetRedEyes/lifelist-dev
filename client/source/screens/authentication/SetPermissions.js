@@ -49,7 +49,7 @@ export default function SetPermissions() {
                 isValid && headerStyles.saveButtonTextActive,
               ]}
             >
-              Save
+              Create Profile
             </Text>
           </Pressable>
         </View>

@@ -2,12 +2,12 @@
   "expo": {
     "name": "LifeList",
     "slug": "lifelist",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
-    "icon": "./assets/lifelist-icon.png",
+    "icon": "./assets/branding/lifelist-icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/lifelist-icon.png",
+      "image": "./assets/branding/lifelist-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,33 +16,40 @@
       "bundleIdentifier": "com.joinlifelist.lifelist",
       "buildNumber": "1.0.1",
       "supportsTablet": true,
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images.",
-        "NSCameraUsageDescription": "This app needs access to your camera to take photos."
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos.",
+        "NSPhotoLibraryAddUsageDescription": "This app needs access to your photo library to save photos.",
+        "NSContactsUsageDescription": "This app needs access to your contacts to help you connect with friends."
       },
       "config": {
         "usesPushNotifications": true
       }
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
-      ]
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "permissions": ["CAMERA"],
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
       "expo-secure-store",
       [
         "expo-camera",
         {
           "cameraPermission": "Allow LifeList to access your camera"
+        }
+      ],
+      [
+      "expo-contacts",
+        {
+          "contactsPermission": "Allow LifeList to access your contacts."
         }
       ],
       "expo-asset"

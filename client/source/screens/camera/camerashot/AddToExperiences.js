@@ -14,7 +14,6 @@ import { useAdminLifeList } from "../../../contexts/AdminLifeListContext";
 import {
   containerStyles,
   layoutStyles,
-  headerStyles,
   symbolStyles,
 } from "../../../styles/components/index";
 
@@ -44,28 +43,32 @@ export default function AddToExperiences() {
     initializeCache();
   }, [isLifeListCacheInitialized]);
 
-  // Update header options dynamically
+  const handleBackNavigation = () => {
+    navigation.goBack();
+  };
+
+  // Update header options
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      headerTitleContainerStyle: {
-        width: "100%",
-      },
-      headerTitle: () => (
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          onFocusChange={setIsSearchFocused}
-        />
-      ),
-      headerLeft: () => (
-        <View style={headerStyles.headerLeft}>
+      header: () => (
+        <View style={styles.headerContainer}>
+          {/* Back Button */}
           <ButtonIcon
             name="chevron.backward"
             weight="medium"
-            onPress={navigation.goBack}
+            onPress={handleBackNavigation}
             style={symbolStyles.backArrow}
           />
+
+          {/* Search Bar */}
+          <View style={[styles.searchBarContainer, { marginLeft: 16 }]}>
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onFocusChange={setIsSearchFocused}
+            />
+          </View>
         </View>
       ),
     });
@@ -127,3 +130,17 @@ export default function AddToExperiences() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 64,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#121212",
+  },
+  searchBarContainer: {
+    flex: 1,
+  },
+});

@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import DangerAlert from "../../alerts/DangerAlert";
 import SmallGreyButton from "../../buttons/SmallGreyButton";
 import { cardStyles } from "../../styles/components/cardStyles";
+import { useNavigation } from "@react-navigation/native";
 
 export default function UserBlockedCard({
   userId,
@@ -12,15 +13,23 @@ export default function UserBlockedCard({
   profilePicture,
   onUnblock,
 }) {
+  const navigation = useNavigation();
   const [alertVisible, setAlertVisible] = useState(false);
+
+  const handleProfilePress = () => navigation.push("Profile", { userId });
 
   const toggleAlert = () => setAlertVisible(!alertVisible);
 
   return (
     <View style={cardStyles.listItemContainer}>
       <View style={cardStyles.contentContainer}>
-        <Image source={{ uri: profilePicture }} style={cardStyles.imageMd} />
-        <Pressable style={cardStyles.textContainer}>
+        <Pressable onPress={handleProfilePress}>
+          <Image source={{ uri: profilePicture }} style={cardStyles.imageMd} />
+        </Pressable>
+        <Pressable
+          style={cardStyles.textContainer}
+          onPress={handleProfilePress}
+        >
           <Text style={cardStyles.primaryText}>{fullName}</Text>
           <Text style={cardStyles.secondaryText}>@{username}</Text>
         </Pressable>

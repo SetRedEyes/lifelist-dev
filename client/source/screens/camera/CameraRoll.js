@@ -24,13 +24,7 @@ export default function CameraRoll() {
 
   const { albums, initializeAlbumCache, isAlbumCacheInitialized } =
     useCameraAlbums();
-  const {
-    shots,
-    loadNextPage,
-    initializeCameraRollCache,
-    isCameraRollCacheInitialized,
-    hasNextPage,
-  } = useCameraRoll();
+  const { shots, loadNextPage, hasNextPage } = useCameraRoll();
 
   // Set header options dynamically
   useEffect(() => {
@@ -66,18 +60,28 @@ export default function CameraRoll() {
     });
   }, [navigation, setAlbumModalVisible]);
 
-  // Initialize caches on component mount
   useEffect(() => {
-    const initializeCaches = async () => {
+    const loadInitialShots = async () => {
       try {
-        if (!isAlbumCacheInitialized) await initializeAlbumCache();
-        if (!isCameraRollCacheInitialized) await initializeCameraRollCache();
+        await loadNextPage();
       } catch (error) {
-        console.error("[CameraRoll] Error initializing caches:", error);
+        console.error("[CameraRoll] Error loading initial shots:", error);
       }
     };
-    initializeCaches();
-  }, [isAlbumCacheInitialized, isCameraRollCacheInitialized]);
+    loadInitialShots();
+  }, []);
+
+  // Initialize album cache on component mount
+  useEffect(() => {
+    const initializeAlbum = async () => {
+      try {
+        if (!isAlbumCacheInitialized) await initializeAlbumCache();
+      } catch (error) {
+        console.error("[CameraRoll] Error initializing album cache:", error);
+      }
+    };
+    initializeAlbum();
+  }, [isAlbumCacheInitialized]);
 
   // Handle album creation
   const handleCreateAlbum = (title) => {
@@ -157,7 +161,7 @@ export default function CameraRoll() {
             onEndReached={() => {
               loadMoreShots();
             }}
-            onEndReachedThreshold={0.5}
+            onEndReachedThreshold={0.2}
             ListFooterComponent={
               isFetchingMore ? (
                 <ActivityIndicator size="small" color="#6AB952" />
@@ -198,7 +202,7 @@ export default function CameraRoll() {
       />
 
       {/* Main Content */}
-      {isAlbumCacheInitialized && isCameraRollCacheInitialized ? (
+      {isAlbumCacheInitialized ? (
         renderMainList()
       ) : (
         <View style={cameraStyles.loadingContainer}>

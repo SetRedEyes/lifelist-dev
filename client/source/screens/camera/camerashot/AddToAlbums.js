@@ -1,5 +1,11 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, FlatList, ActivityIndicator, Text } from "react-native";
+import {
+  View,
+  FlatList,
+  ActivityIndicator,
+  Text,
+  StyleSheet,
+} from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useCameraAlbums } from "../../../contexts/CameraAlbumContext";
 import ButtonIcon from "../../../icons/ButtonIcon";
@@ -7,7 +13,6 @@ import AlbumSelectCard from "../../../cards/camera/AlbumSelectCard";
 import SearchBar from "../../../headers/SearchBar";
 import {
   containerStyles,
-  headerStyles,
   layoutStyles,
   symbolStyles,
 } from "../../../styles/components/index";
@@ -36,28 +41,32 @@ export default function AddToAlbums() {
     initializeCaches();
   }, [isAlbumCacheInitialized]);
 
+  const handleBackNavigation = () => {
+    navigation.goBack();
+  };
+
   // Update header options
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      headerTitleContainerStyle: {
-        width: "100%",
-      },
-      headerTitle: () => (
-        <SearchBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          onFocusChange={setIsSearchFocused}
-        />
-      ),
-      headerLeft: () => (
-        <View style={headerStyles.headerLeft}>
+      header: () => (
+        <View style={styles.headerContainer}>
+          {/* Back Button */}
           <ButtonIcon
             name="chevron.backward"
             weight="medium"
-            onPress={navigation.goBack}
+            onPress={handleBackNavigation}
             style={symbolStyles.backArrow}
           />
+
+          {/* Search Bar */}
+          <View style={[styles.searchBarContainer, { marginLeft: 16 }]}>
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onFocusChange={setIsSearchFocused}
+            />
+          </View>
         </View>
       ),
     });
@@ -107,3 +116,17 @@ export default function AddToAlbums() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 64,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#121212",
+  },
+  searchBarContainer: {
+    flex: 1,
+  },
+});

@@ -23,12 +23,7 @@ export default function Media() {
     useCreateCollageContext();
   const [showAlert, setShowAlert] = useState(false);
 
-  const {
-    shots,
-    initializeCameraRollCache,
-    loadNextPage,
-    isCameraRollCacheInitialized,
-  } = useCameraRoll();
+  const { shots, loadNextPage, hasNextPage } = useCameraRoll();
 
   // === Handle collage reset if coming from MainFeed ===
   useEffect(() => {
@@ -37,11 +32,16 @@ export default function Media() {
     }
   }, [route.params]);
 
-  // Initialize camera roll cache
+  // Fetch initial data when the component is focused
   useFocusEffect(() => {
-    if (!isCameraRollCacheInitialized) {
-      initializeCameraRollCache();
-    }
+    const fetchInitialShots = async () => {
+      try {
+        await loadNextPage();
+      } catch (error) {
+        console.error("[Media] Error loading initial shots:", error);
+      }
+    };
+    fetchInitialShots();
   });
 
   useEffect(() => {
@@ -140,6 +140,12 @@ export default function Media() {
     />
   );
 
+  const handleEndReached = () => {
+    if (hasNextPage) {
+      loadNextPage();
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: "#121212" }}>
       <View style={styles.selectedContainer}>
@@ -165,7 +171,7 @@ export default function Media() {
         numColumns={3}
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.flatListContent}
-        onEndReached={loadNextPage}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
       />
 
@@ -196,10 +202,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   columnWrapper: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    marginHorizontal: 0,
   },
   flatListContent: {
     flexGrow: 1,
-    paddingBottom: 20,
   },
 });

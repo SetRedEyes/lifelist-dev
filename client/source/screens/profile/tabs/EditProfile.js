@@ -17,6 +17,8 @@ import { useAdminProfile } from "../../../contexts/AdminProfileContext";
 import { formStyles } from "../../../styles/components/formStyles";
 import { editProfileStyles } from "../../../styles/screens/editProfileStyles";
 import AuthenticationButton from "../../../buttons/AuthenticationButton";
+import Icon from "../../../icons/Icon";
+import { symbolStyles } from "../../../styles/components/symbolStyles";
 
 export default function EditProfileTab() {
   const {
@@ -26,7 +28,16 @@ export default function EditProfileTab() {
     resetAdminChanges,
     unsavedChanges,
     setProfilePictureUri,
+    isSaving,
+    setIsSaving,
   } = useAdminProfile();
+
+  // === Handle Save Changes Button Press ===
+  const handleSaveChanges = async () => {
+    setIsSaving(true); // Set loading state to true
+    await saveAdminProfile();
+    setIsSaving(false); // Reset loading state after saving
+  };
 
   // === Resize and compress the selected image ===
   const resizeAndCompressImage = async (uri) => {
@@ -164,30 +175,50 @@ export default function EditProfileTab() {
           {/* Gender (Non-editable) */}
           <View style={formStyles.inputWrapper}>
             <Text style={formStyles.label}>Gender</Text>
-            <TextInput
-              value={
-                adminProfile?.gender
-                  ? adminProfile.gender.charAt(0).toUpperCase() +
-                    adminProfile.gender.slice(1).toLowerCase()
-                  : "Not specified"
-              }
-              style={[formStyles.input, { color: "#d4d4d4" }]}
-              editable={false}
-            />
+            <View style={{ position: "relative" }}>
+              <TextInput
+                value={
+                  adminProfile?.gender
+                    ? adminProfile.gender.charAt(0).toUpperCase() +
+                      adminProfile.gender.slice(1).toLowerCase()
+                    : "Not specified"
+                }
+                style={[formStyles.input, formStyles.disabledInput]}
+                editable={false}
+              />
+              <View style={formStyles.lockIcon}>
+                <Icon
+                  name={"lock"}
+                  weight="semibold"
+                  tintColor="#696969"
+                  style={symbolStyles.lock}
+                />
+              </View>
+            </View>
           </View>
 
           {/* Birthday (Non-editable) */}
           <View style={formStyles.inputWrapper}>
             <Text style={formStyles.label}>Birthday</Text>
-            <TextInput
-              value={
-                adminProfile?.birthday
-                  ? formatDate(adminProfile.birthday)
-                  : "Not specified"
-              }
-              style={[formStyles.input, { color: "#d4d4d4" }]}
-              editable={false}
-            />
+            <View style={{ position: "relative" }}>
+              <TextInput
+                value={
+                  adminProfile?.birthday
+                    ? formatDate(adminProfile.birthday)
+                    : "Not specified"
+                }
+                style={[formStyles.input, formStyles.disabledInput]}
+                editable={false}
+              />
+              <View style={formStyles.lockIcon}>
+                <Icon
+                  name={"lock"}
+                  weight="semibold"
+                  tintColor="#696969"
+                  style={symbolStyles.lock}
+                />
+              </View>
+            </View>
           </View>
 
           {/* Login Button */}
@@ -196,8 +227,8 @@ export default function EditProfileTab() {
             borderColor={unsavedChanges ? "#6AB95250" : "#1c1c1c"}
             textColor={unsavedChanges ? "#6AB952" : "#696969"}
             width="100%"
-            text="Save Changes"
-            onPress={unsavedChanges ? saveAdminProfile : null}
+            text={isSaving ? "Saving..." : "Save Changes"} // Dynamic text
+            onPress={unsavedChanges && !isSaving ? handleSaveChanges : null}
             disabled={!unsavedChanges}
           />
           {unsavedChanges && (

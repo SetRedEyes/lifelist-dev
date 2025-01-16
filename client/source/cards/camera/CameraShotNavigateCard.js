@@ -22,31 +22,34 @@ export default function CameraShotNavigateCard({
   return (
     <Pressable
       onPress={() => {
-        if (fromExperience) {
-          // Navigate to ViewShotExperience if from an experience
+        if (fromExperience && experienceShots?.length > 0) {
+          // Navigate to ViewExperienceFeed if from an experience
           navigation.navigate("ViewExperienceFeed", {
             shotId: shot._id,
             experienceShots,
-            initialIndex: experienceShots.findIndex((s) => s._id === shot._id),
+            initialIndex:
+              experienceShots.findIndex((s) => s._id === shot._id) ?? 0,
             experienceId,
             experienceList,
           });
-        }
-        if (fromAlbum) {
-          // Navigate to ViewShot
+        } else if (fromAlbum && albumShots?.length > 0) {
+          // Navigate to ViewShot if from an album
           navigation.navigate("ViewShot", {
             shotId: shot._id,
             albumShots,
-            initialIndex: albumShots.findIndex((s) => s._id === shot._id),
+            initialIndex: albumShots.findIndex((s) => s._id === shot._id) ?? 0,
             fromAlbum,
           });
-        } else {
+        } else if (cameraRoll?.length > 0) {
+          // Navigate to ViewShot if from the camera roll
           navigation.navigate("ViewShot", {
             shotId: shot._id,
             cameraRoll,
-            initialIndex: cameraRoll.findIndex((s) => s._id === shot._id),
+            initialIndex: cameraRoll.findIndex((s) => s._id === shot._id) ?? 0,
             fromAlbum,
           });
+        } else {
+          console.warn("No shots available for navigation.");
         }
       }}
       style={[

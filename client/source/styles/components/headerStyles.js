@@ -196,4 +196,21 @@ export const headerStyles = StyleSheet.create({
     width: 100,
     height: 40,
   },
+
+  // === Camera Header === //
+
+  shotsLeftContainer: {
+    marginRight: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1C1C1C",
+    borderRadius: 50,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  shotsLeftText: {
+    color: "#696969", // Light grey text
+    fontSize: 12,
+    fontWeight: "500",
+  },
 });

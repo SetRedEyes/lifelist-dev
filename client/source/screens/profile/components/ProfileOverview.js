@@ -183,7 +183,7 @@ export default function ProfileOverview({
             {renderActionButton()}
           </View>
         </View>
-        <View>
+        <View style={disableButtons && { marginBottom: 16 }}>
           <Text style={profileStyles.username}>@{profile?.username}</Text>
           <Text style={profileStyles.bio}>{profile?.bio}</Text>
         </View>

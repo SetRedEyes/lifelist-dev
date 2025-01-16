@@ -65,7 +65,7 @@ export default function ExperienceCard({
             <Text style={cardStyles.secondaryText}>{capitalizedCategory}</Text>
             {hasAssociatedShots && (
               <Icon
-                name="photo.on.rectangle"
+                name="photo"
                 style={symbolStyles.photoIcon}
                 tintColor="#696969"
               />

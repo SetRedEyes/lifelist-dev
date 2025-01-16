@@ -252,12 +252,7 @@ export default function Moments() {
   const isAuthor = currentMoment.author._id === currentUser;
 
   return (
-    <View
-      style={[
-        layoutStyles.wrapper,
-        { justifyContent: "center", alignContent: "center" },
-      ]}
-    >
+    <View style={[layoutStyles.wrapper, { paddingTop: 24 }]}>
       {/* Progress Bar */}
       <View style={styles.progressBarContainer}>
         {moments.map((_, i) => (
@@ -316,7 +311,7 @@ export default function Moments() {
         <Icon
           name={isLiked ? "heart.fill" : "heart"}
           tintColor={isLiked ? "#ff0000" : "#ffffff"}
-          style={iconStyles.like}
+          style={symbolStyles.like}
           weight="semibold"
           onPress={() => {
             if (!isAuthor) {

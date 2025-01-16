@@ -28,7 +28,7 @@ export default function NotificationCard({
       style={cardStyles.deleteButton}
       onPress={() => onDelete(notificationId)}
     >
-      <Icon name="trash" style={symbolStyles.deleteIcon} tintColor="#FF3B30" />
+      <Icon name="trash" style={symbolStyles.trash} tintColor="#FF3B30" />
     </Pressable>
   );
 

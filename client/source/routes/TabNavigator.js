@@ -105,6 +105,7 @@ function getTabBarVisibility(route, tabName) {
     "OnboardingStack",
     "BucketListOnboarding",
     "DevelopingDisplay",
+    "Moments",
   ];
 
   // Hide TabBar if the focused route is in the hidden list

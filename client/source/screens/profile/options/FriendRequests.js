@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useQuery } from "@apollo/client";
-import { GET_FOLLOW_REQUESTS } from "../../../utils/queries/index";
+import { GET_FOLLOW_REQUESTS } from "../../../utils/queries/notificationQueries";
 import UserRequestCard from "../../../cards/user/UserRequestCard";
 import SearchBar from "../../../headers/SearchBar";
 import { notificationsStyles } from "../../../styles/screens/notificationStyles";

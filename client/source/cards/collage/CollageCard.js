@@ -7,9 +7,11 @@ import {
   saveImageToFileSystem,
 } from "../../utils/caching/cacheHelpers";
 
-const screenWidth = Dimensions.get("window").width;
-const spacing = 2; // Gap between images
-const imageWidth = (screenWidth - spacing * 4) / 3;
+// Calculate the image dimensions to maintain a 2:3 aspect ratio
+const { width: screenWidth } = Dimensions.get("window");
+const spacing = 2;
+const imageWidth = (screenWidth - spacing * 4) / 3; // Calculate the width for three columns
+const imageHeight = (imageWidth * 3) / 2; // Maintain 2:3 aspect ratio
 
 export default function CollageCard({
   collageId,
@@ -17,7 +19,7 @@ export default function CollageCard({
   index,
   collages,
   cacheKeyPrefix,
-  shouldCache = true, // New prop to control caching
+  shouldCache = true,
 }) {
   const navigation = useNavigation();
   const [imageUri, setImageUri] = useState(null);
@@ -43,7 +45,6 @@ export default function CollageCard({
 
           setImageUri(uri);
         } else {
-          // If caching is disabled, use the direct path
           setImageUri(path);
         }
       } catch (error) {
@@ -72,13 +73,13 @@ export default function CollageCard({
 
 const styles = StyleSheet.create({
   container: {
-    width: imageWidth, // Ensure each image is square
-    height: imageWidth,
-    marginRight: spacing, // Right margin for spacing between items
-    marginBottom: spacing, // Bottom margin for spacing between rows
+    width: imageWidth,
+    height: imageHeight,
+    marginRight: spacing,
+    marginBottom: spacing,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#252525", // Background color for the card
+    backgroundColor: "#252525",
   },
   image: {
     width: "100%",

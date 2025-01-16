@@ -92,6 +92,7 @@ export default function MainFeedStack() {
           headerStyle: {
             backgroundColor: "#121212",
           },
+          gestureEnabled: false,
         }}
       />
       <Stack.Screen
@@ -162,6 +163,7 @@ export default function MainFeedStack() {
           headerStyle: {
             backgroundColor: "#121212",
           },
+          gestureEnabled: false,
         }}
       />
       <Stack.Screen

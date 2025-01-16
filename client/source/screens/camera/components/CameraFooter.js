@@ -44,14 +44,20 @@ export default function CameraFooter({
         <Pressable onPress={navigateToCameraRoll} style={styles.iconContainer}>
           <ButtonIcon
             name="photo"
-            style={symbolStyles.photoGallery}
+            style={symbolStyles.rollSymbol}
             tintColor="#fff"
             onPress={navigateToCameraRoll}
             size="extralarge"
           />
         </Pressable>
         <View style={styles.circleContainer}>
-          <Pressable onPress={handleTakePhoto} disabled={isProcessing}>
+          <Pressable
+            onPress={handleTakePhoto}
+            disabled={isProcessing}
+            style={{
+              opacity: isProcessing ? 0.5 : 1, // Reduce opacity when processing
+            }}
+          >
             <LinearGradient
               colors={["#6AB952", "#5FC4ED"]}
               style={styles.circleOutline}
@@ -66,7 +72,7 @@ export default function CameraFooter({
         >
           <ButtonIcon
             name="film"
-            style={[symbolStyles.inDevelopment]}
+            style={symbolStyles.rollSymbol}
             tintColor="#fff"
             onPress={navigateToDevelopingRoll}
             size="extralarge"
@@ -136,6 +142,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center", // Center icons vertically and horizontally
     width: 75,
+    zIndex: 10,
   },
   circleContainer: {
     justifyContent: "center", // Center circle vertically

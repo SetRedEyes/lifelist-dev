@@ -1,11 +1,12 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { View, Text, StyleSheet, Dimensions, Animated } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  Dimensions,
+  Animated,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import ButtonIcon from "../../icons/ButtonIcon";
 import { symbolStyles } from "../../styles/components/symbolStyles";
 import CameraHeader from "./components/CameraHeader";
@@ -16,17 +17,19 @@ import { GET_PRESIGNED_URL } from "../../utils/queries/cameraQueries";
 import { CREATE_CAMERA_SHOT } from "../../utils/mutations/cameraMutations";
 import { useLazyQuery, useMutation } from "@apollo/client";
 import { useDevelopingRoll } from "../../contexts/DevelopingRollContext";
+import MessageAlert from "../../alerts/MessageAlert";
 import {
   saveMetadataToCache,
   getMetadataFromCache,
 } from "../../utils/caching/cacheHelpers";
 import * as ImageManipulator from "expo-image-manipulator";
-import { layoutStyles } from "../../styles/components/index";
-import { BlurView } from "expo-blur";
+import { headerStyles, layoutStyles } from "../../styles/components/index";
+import { useFocusEffect } from "@react-navigation/native";
 
 const screenWidth = Dimensions.get("window").width;
 const cameraHeight = (screenWidth * 3) / 2;
 const MAX_SHOTS_PER_DAY = 10;
+const SHOTS_LEFT_KEY = "shotsLeft";
 
 export default function Camera({ navigation }) {
   const [shotsLeft, setShotsLeft] = useState(MAX_SHOTS_PER_DAY);
@@ -35,8 +38,10 @@ export default function Camera({ navigation }) {
   const [facing, setFacing] = useState("back");
   const [flash, setFlash] = useState("off");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [messageVisible, setMessageVisible] = useState(false);
   const cameraRef = useRef(null);
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const blurAnim = useRef(new Animated.Value(0)).current;
 
   // Fetch cached values on component mount
   useEffect(() => {
@@ -83,7 +88,7 @@ export default function Camera({ navigation }) {
         backgroundColor: "#121212",
       },
       headerLeft: () => (
-        <View style={styles.headerLeft}>
+        <View style={headerStyles.headerLeft}>
           <ButtonIcon
             name="xmark"
             weight="medium"
@@ -93,8 +98,8 @@ export default function Camera({ navigation }) {
         </View>
       ),
       headerRight: () => (
-        <View style={styles.shotsLeftContainer}>
-          <Text style={styles.shotsLeftText}>{shotsLeft} Shots</Text>
+        <View style={headerStyles.shotsLeftContainer}>
+          <Text style={headerStyles.shotsLeftText}>{shotsLeft} Shots</Text>
         </View>
       ),
     });
@@ -118,13 +123,6 @@ export default function Camera({ navigation }) {
   const handleShowCameraOptions = useCallback(() => {
     setShowCameraOptions((prev) => !prev);
   }, []);
-
-  const rotation = useMemo(() => {
-    return rotateAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: ["0deg", "90deg"],
-    });
-  }, [rotateAnim]);
 
   /* const handleShowCameraOptions = () => setShowCameraOptions((prev) => !prev); */
 
@@ -156,13 +154,6 @@ export default function Camera({ navigation }) {
     loadCameraType();
   }, []);
 
-  const calculateTodayShots = () => {
-    const today = new Date().toISOString().split("T")[0];
-    return developingShots.filter(
-      (shot) => new Date(shot.capturedAt).toISOString().split("T")[0] === today
-    ).length;
-  };
-
   // Initialize DevelopingRollContext Cache
   useEffect(() => {
     if (!isDevelopingRollCacheInitialized) {
@@ -175,85 +166,99 @@ export default function Camera({ navigation }) {
       if (!isDevelopingRollCacheInitialized) {
         await initializeDevelopingRoll();
       }
-      const todayShots = calculateTodayShots();
-
-      setShotsLeft(MAX_SHOTS_PER_DAY - todayShots);
     };
 
     loadCacheAndCalculateShots();
   }, [isDevelopingRollCacheInitialized, developingShots]);
 
-  // Reset shots at midnight
-  const resetShotsAtMidnight = async () => {
+  // Helper to calculate the TTL until midnight
+  const getTimeUntilMidnight = () => {
     const now = new Date();
-    const today = now.toISOString().split("T")[0]; // Get today's date (YYYY-MM-DD)
-    const storedDate = await getMetadataFromCache("shotsLastResetDate", true);
-
-    if (storedDate !== today) {
-      // Reset the shot count if the stored date is different
-      saveMetadataToCache("shotsLastResetDate", today, true);
-      saveMetadataToCache("shotsLeft", MAX_SHOTS_PER_DAY, true);
-      setShotsLeft(MAX_SHOTS_PER_DAY);
-    } else {
-      // Otherwise, restore the remaining shots from the cache
-      const cachedShotsLeft = await getMetadataFromCache("shotsLeft", true);
-      if (cachedShotsLeft !== null) {
-        setShotsLeft(cachedShotsLeft);
-      }
-    }
+    const midnight = new Date();
+    midnight.setHours(24, 0, 0, 0); // Set to midnight of the next day
+    return midnight.getTime() - now.getTime();
   };
 
-  useEffect(() => {
-    resetShotsAtMidnight();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const checkShotsCache = async () => {
+        const cachedShotsLeft = await getMetadataFromCache(
+          SHOTS_LEFT_KEY,
+          true
+        );
+
+        // If TTL has expired or there's no cache, reset shotsLeft
+        if (cachedShotsLeft === null) {
+          const ttl = getTimeUntilMidnight();
+          await saveMetadataToCache(
+            SHOTS_LEFT_KEY,
+            MAX_SHOTS_PER_DAY,
+            true,
+            ttl
+          );
+          setShotsLeft(MAX_SHOTS_PER_DAY);
+        } else {
+          setShotsLeft(cachedShotsLeft);
+        }
+      };
+
+      checkShotsCache();
+    }, [])
+  );
 
   // CAMERA SHOT CREATION
   const [createCameraShot] = useMutation(CREATE_CAMERA_SHOT);
   const [getPresignedUrl] = useLazyQuery(GET_PRESIGNED_URL);
 
   const handleTakePhoto = async () => {
+    setIsProcessing(true);
+
     if (shotsLeft <= 0) {
       alert("No shots left for today!");
+      setIsProcessing(false);
       return;
     }
 
-    // Initialize cache if not already done
-    if (!isDevelopingRollCacheInitialized) {
-      await initializeDevelopingRoll();
-    }
+    // Immediately decrement shotsLeft and update cache
+    const newShotsLeft = shotsLeft - 1;
+    setShotsLeft(newShotsLeft);
 
-    // Disable the button and blur the camera
-    setIsProcessing(true);
+    try {
+      await saveMetadataToCache(SHOTS_LEFT_KEY, newShotsLeft, true);
 
-    if (cameraRef.current) {
-      try {
-        // Capture the photo
-        const photo = await cameraRef.current.takePictureAsync({ quality: 1 });
-        const resizedUri = await resizeImage(photo.uri, 1280, 1920);
-        const thumbnailUri = await resizeImage(photo.uri, 400, 600);
+      if (cameraRef.current) {
+        try {
+          // Capture the photo
+          const photo = await cameraRef.current.takePictureAsync({
+            quality: 1,
+          });
 
-        // Upload the resized image and thumbnail
-        const newShot = await uploadShot(resizedUri, thumbnailUri);
+          const resizedUri = await resizeImage(photo.uri, 1280, 1920);
+          const thumbnailUri = await resizeImage(photo.uri, 400, 600);
 
-        addShot({
-          _id: newShot._id,
-          image: newShot.image,
-          imageThumbnail: newShot.imageThumbnail,
-          developingTime: newShot.developingTime,
-          isDeveloped: newShot.isDeveloped,
-          readyToReviewAt: newShot.readyToReviewAt,
-          transferredToRoll: newShot.transferredToRoll,
-        });
+          // Upload the resized image and thumbnail
+          const newShot = await uploadShot(resizedUri, thumbnailUri);
 
-        const newShotsLeft = shotsLeft - 1;
-        setShotsLeft(newShotsLeft);
-        saveMetadataToCache("shotsLeft", newShotsLeft, true); // Persistent cache
-      } catch (error) {
-        console.error("Error taking photo:", error);
-      } finally {
-        // Re-enable the button and remove blur after processing
-        setIsProcessing(false);
+          if (newShot) {
+            addShot(newShot);
+          }
+        } catch (error) {
+          console.error("Error taking photo:", error);
+
+          // Revert shotsLeft in case of an error
+          setShotsLeft(shotsLeft);
+          await saveMetadataToCache(SHOTS_LEFT_KEY, shotsLeft, true);
+        }
       }
+    } catch (error) {
+      console.error("Error updating shotsLeft cache:", error);
+      alert("Failed to update your shots. Please try again.");
+    } finally {
+      setIsProcessing(false);
+
+      // Show the alert message
+      setMessageVisible(true);
+      setTimeout(() => setMessageVisible(false), 1500);
     }
   };
 
@@ -321,6 +326,15 @@ export default function Camera({ navigation }) {
     await fetch(presignedUrl, { method: "PUT", body: blob });
   };
 
+  // Animate blur overlay
+  useEffect(() => {
+    Animated.timing(blurAnim, {
+      toValue: isProcessing ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [isProcessing]);
+
   return (
     <View style={layoutStyles.wrapper}>
       <CameraView
@@ -328,6 +342,28 @@ export default function Camera({ navigation }) {
         style={{ height: cameraHeight, width: screenWidth }}
         facing={facing}
         flash={flash}
+      />
+      {/* Loading Overlay */}
+      {isProcessing && (
+        <Animated.View
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            opacity: blurAnim,
+            justifyContent: "center",
+            alignItems: "center",
+            width: screenWidth,
+            height: cameraHeight,
+          }}
+        >
+          <ActivityIndicator size="large" color="#ffffff" />
+          <Text style={{ color: "#ffffff", marginTop: 16 }}>Processing...</Text>
+        </Animated.View>
+      )}
+      {/* Message Alert */}
+      <MessageAlert
+        message="Added to Developing Roll"
+        visible={messageVisible}
       />
       <CameraFooter
         handleTakePhoto={handleTakePhoto}
@@ -344,26 +380,3 @@ export default function Camera({ navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  headerLeft: {
-    marginLeft: 16,
-  },
-  shotsLeftContainer: {
-    marginRight: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1C1C1C",
-    borderRadius: 50,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  shotsLeftText: {
-    color: "#696969", // Light grey text
-    fontSize: 12,
-    fontWeight: "500",
-  },
-});

@@ -110,7 +110,13 @@ export default function Comments({
       visible={visible}
       onRequestClose={onRequestClose}
       initialHeight={screenHeight * 0.6}
-      draggableHeader={<Text style={menuStyles.draggableHeader}>Comments</Text>}
+      draggableHeader={
+        <Text
+          style={[menuStyles.draggableHeader, { borderBottomColor: "#252525" }]}
+        >
+          Comments
+        </Text>
+      }
     >
       <Pressable
         style={menuStyles.commentPopupContainer}

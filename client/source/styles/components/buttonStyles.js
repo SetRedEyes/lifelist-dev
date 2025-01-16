@@ -9,6 +9,12 @@ export const buttonStyles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#1C1C1C", // Grey color for button
   },
+  collageButton: {
+    borderRadius: 32,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    backgroundColor: "#1C1C1C", // Grey color for button
+  },
   smallButtonText: {
     fontWeight: "600",
     fontSize: 12,

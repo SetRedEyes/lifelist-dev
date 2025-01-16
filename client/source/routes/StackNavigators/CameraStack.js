@@ -60,6 +60,7 @@ export default function CameraStack() {
         options={{
           headerShown: true,
           title: "Camera Roll",
+          gestureDirection: "horizontal-inverted",
           cardStyleInterpolator: ({ current, layouts }) => ({
             cardStyle: {
               transform: [

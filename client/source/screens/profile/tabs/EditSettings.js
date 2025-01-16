@@ -27,6 +27,8 @@ export default function EditSettings() {
     updateAdminProfileField,
     saveAdminProfile,
     resetAdminChanges,
+    isSaving,
+    setIsSaving,
   } = useAdminProfile();
 
   const [showAlert, setShowAlert] = useState(false);
@@ -69,8 +71,10 @@ export default function EditSettings() {
 
   // Handle save changes
   const handleSaveChanges = async () => {
+    setIsSaving(true); // Set saving state
     await saveAdminProfile();
     setOriginalPrivacy(adminProfile?.settings?.isProfilePrivate || false);
+    setIsSaving(false); // Reset saving state
   };
 
   // Handle discard changes
@@ -164,8 +168,8 @@ export default function EditSettings() {
           borderColor={isModified ? "#6AB95250" : "#1c1c1c"}
           textColor={isModified ? "#6AB952" : "#696969"}
           width="100%"
-          text="Update Privacy"
-          onPress={handleSaveChanges}
+          text={isSaving ? "Saving..." : "Update Privacy"} // Dynamic text
+          onPress={isModified && !isSaving ? handleSaveChanges : null}
         />
 
         {/* Discard Changes Button */}

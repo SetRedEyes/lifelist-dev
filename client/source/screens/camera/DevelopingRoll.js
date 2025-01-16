@@ -13,7 +13,6 @@ import { containerStyles, layoutStyles } from "../../styles/components";
 
 export default function DevelopingRoll() {
   const navigation = useNavigation();
-  const [selectedShot, setSelectedShot] = useState(null);
 
   const {
     developingShots,

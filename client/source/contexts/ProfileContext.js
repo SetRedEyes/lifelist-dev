@@ -86,9 +86,6 @@ export const ProfileProvider = ({ children, userId }) => {
       if (data?.getUserProfileById) {
         const profile = data.getUserProfileById;
 
-        // Log the profile for debugging purposes
-        console.log(profile);
-
         // Set profile data
         setProfileData(profile);
 

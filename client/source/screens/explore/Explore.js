@@ -9,6 +9,8 @@ import {
   ScrollView,
   RefreshControl,
   Pressable,
+  Animated,
+  PanResponder,
 } from "react-native";
 import { useLazyQuery } from "@apollo/client";
 import SearchBar from "../../headers/SearchBar";
@@ -27,10 +29,9 @@ import {
   getMetadataFromCache,
 } from "../../utils/caching/cacheHelpers";
 import { GET_ALL_USERS } from "../../utils/queries/userQueries";
+import { containerStyles } from "../../styles/components";
 
 const screenWidth = Dimensions.get("window").width;
-const collageWidth = (screenWidth - 38) / 2;
-const collageHeight = collageWidth * 1.5;
 
 const SEARCH_CACHE_KEY = "explore_search_cache";
 const RECENTLY_SEEN_PROFILES = "recently_seen_profiles";
@@ -45,6 +46,7 @@ export default function Explore({ navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(false); // Refresh state
   const [isSearchActive, setIsSearchActive] = useState(false);
   const searchBarRef = useRef(null);
+  const translateX = useRef(new Animated.Value(0)).current;
 
   // User search state
   const [users, setUsers] = useState([]);
@@ -180,6 +182,7 @@ export default function Explore({ navigation }) {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchQuery.trim().length > 1) {
+        setUsers([]); // Clear users before new search
         loadUsers({
           variables: { searchQuery, limit: 10, cursor: null },
         });
@@ -194,8 +197,10 @@ export default function Explore({ navigation }) {
   const handleSearchFocusChange = (isFocused) => setIsFocused(isFocused);
 
   const fetchMoreUsers = () => {
-    if (userHasNextPage && !userLoading) {
-      loadUsers({ variables: { searchQuery, limit: 10, cursor: userCursor } });
+    if (userHasNextPage && !userLoading && userCursor) {
+      loadUsers({
+        variables: { searchQuery, limit: 10, cursor: userCursor },
+      });
     }
   };
 
@@ -318,6 +323,39 @@ export default function Explore({ navigation }) {
     }, 25);
   };
 
+  // PanResponder for swipe gesture
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: (_, gestureState) => {
+      return gestureState.dx > 0; // Start if the swipe is towards the right
+    },
+    onPanResponderMove: (_, gestureState) => {
+      if (gestureState.dx > 0) {
+        // Move only to the right
+        translateX.setValue(gestureState.dx);
+      }
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dx > screenWidth / 4) {
+        // Dismiss the view if swipe distance exceeds threshold
+        Animated.timing(translateX, {
+          toValue: screenWidth,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          setIsSearchActive(false);
+          setSearchQuery("");
+          translateX.setValue(0); // Reset position
+        });
+      } else {
+        // Reset position if swipe is insufficient
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  });
+
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -376,9 +414,11 @@ export default function Explore({ navigation }) {
               )}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
-                <Text style={styles.noResultsText}>
-                  No recently visited profiles.
-                </Text>
+                <View style={containerStyles.emptyContainer}>
+                  <Text style={containerStyles.emptyText}>
+                    No recently visited profiles.
+                  </Text>
+                </View>
               }
               style={{ marginHorizontal: 8 }}
             />
@@ -410,7 +450,9 @@ export default function Explore({ navigation }) {
             keyExtractor={(_, index) => index.toString()}
             ListHeaderComponent={
               <>
-                <Text style={styles.sectionTitle}>Recommended Profiles</Text>
+                <Text style={[styles.sectionTitle, { marginTop: 8 }]}>
+                  Recommended Profiles
+                </Text>
                 <FlatList
                   data={profiles}
                   horizontal
@@ -424,6 +466,7 @@ export default function Explore({ navigation }) {
                   onEndReached={fetchMoreProfiles}
                   onEndReachedThreshold={0.8}
                   showsHorizontalScrollIndicator={false}
+                  style={{ paddingLeft: 16 }}
                 />
                 <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
                   Recommended Collages
@@ -439,12 +482,10 @@ export default function Explore({ navigation }) {
                     collage={item}
                     collages={collages}
                     index={index}
-                    collageWidth={collageWidth}
-                    collageHeight={collageHeight}
                   />
                 )}
-                numColumns={2}
-                columnWrapperStyle={styles.rowWrapper}
+                numColumns={3}
+                columnWrapperStyle={styles.columnWrapper}
                 showsVerticalScrollIndicator={false}
                 onEndReached={fetchMoreCollages}
                 onEndReachedThreshold={0.8}
@@ -483,18 +524,18 @@ const styles = StyleSheet.create({
   searchBarWithBackArrow: {
     marginLeft: 16,
   },
-  content: {
-    marginHorizontal: 16,
-    paddingTop: 8,
+  searchActiveContainer: {
+    flex: 1,
+    backgroundColor: "#121212",
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: "#fff",
     marginBottom: 8,
+    marginLeft: 16,
   },
-  rowWrapper: {
-    justifyContent: "space-between",
-    marginBottom: 16,
+  columnWrapper: {
+    justifyContent: "flex-start",
   },
 });

@@ -258,6 +258,11 @@ type Score {
     posted: Boolean
     archived: Boolean
     reports: [Report]
+    isLikedByCurrentUser: Boolean
+    isRepostedByCurrentUser: Boolean
+    isSavedByCurrentUser: Boolean
+    hasParticipants: Boolean
+    isViewedByCurrentUser: Boolean
   }
 
   type Comment {
@@ -381,7 +386,7 @@ type Score {
     # Camera Queries
     getAllCameraAlbums: [CameraAlbum]
     getCameraAlbum(albumId: ID!, cursor: ID, limit: Int = 12): CameraAlbumPagination
-    getAllCameraShots(cursor: ID, limit: Int): CameraRollPagination
+    getAllCameraShots(cursor: String, limit: Int): CameraRollPagination
     getCameraShot(shotId: ID!): CameraShot
     getDevelopingCameraShots: [CameraShot]
     getCameraShotsByImages(images: [String]): [CameraShot]
@@ -400,7 +405,7 @@ type Score {
     getAllExperiences(cursor: ID, limit: Int): ExperiencePagination
 
     # Main Feed Queries
-    getMainFeed(userId: ID!, page: Int!): FeedResult
+    getMainFeed(limit: Int, cursor: String): MainFeedResponse
 
     # Explore Queries
     getRecommendedProfiles(cursor: ID, limit: Int, recentlySeen: [ID]): RecommendedProfilePagination
@@ -411,6 +416,20 @@ type Score {
   type FeedResult {
     collages: [Collage]
     hasMore: Boolean
+  }
+
+  type MainFeedResponse {
+    collages: [Collage]
+    nextCursor: String
+    hasNextPage: Boolean!
+  }
+
+  type CollageResponse {
+    collage: Collage
+    isLikedByCurrentUser: Boolean
+    isRepostedByCurrentUser: Boolean
+    isSavedByCurrentUser: Boolean
+    hasParticipants: Boolean
   }
 
   type CollagesRepostsMomentsResponse {
@@ -518,7 +537,7 @@ type ExperienceDetails {
 
   type CameraRollPagination {
     shots: [CameraShot]
-    nextCursor: ID
+    nextCursor: String
     hasNextPage: Boolean
   }
 
@@ -569,14 +588,6 @@ type ExperienceDetails {
 
   type FollowStatus {
     isFollowing: Boolean
-  }
-
-  type CollageResponse {
-    collage: Collage
-    isLikedByCurrentUser: Boolean
-    isRepostedByCurrentUser: Boolean
-    isSavedByCurrentUser: Boolean
-    hasParticipants: Boolean
   }
 
   type UserData {

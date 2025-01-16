@@ -30,7 +30,8 @@ export const cameraStyles = StyleSheet.create({
     color: "#888",
   },
   columnWrapper: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    marginHorizontal: 0,
   },
   loadingContainer: {
     flex: 1,

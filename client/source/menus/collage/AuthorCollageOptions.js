@@ -13,6 +13,9 @@ import { symbolStyles } from "../../styles/components/symbolStyles";
 import BottomPopup from "../BottomPopup";
 import DangerAlert from "../../alerts/DangerAlert";
 import { useState } from "react";
+import * as Sharing from "expo-sharing";
+import * as Clipboard from "expo-clipboard";
+import * as Linking from "expo-linking";
 
 export default function AuthorCollageOptions({
   visible,
@@ -81,12 +84,71 @@ export default function AuthorCollageOptions({
     }
   };
 
+  // Share Collage via Expo Sharing
+  const handleShareCollage = async (imageUri) => {
+    if (!(await Sharing.isAvailableAsync())) {
+      Alert.alert(
+        "Sharing Not Available",
+        "Your device doesn't support sharing."
+      );
+      return;
+    }
+
+    try {
+      await Sharing.shareAsync(imageUri);
+    } catch (error) {
+      console.error("Error sharing collage:", error);
+    }
+  };
+
+  // Copy Link using Expo Clipboard
+  const handleCopyLink = async (url) => {
+    await Clipboard.setStringAsync(url);
+    Alert.alert("Link Copied", "The link has been copied to your clipboard!");
+  };
+
+  // Open Instagram via Expo Linking
+  const handleOpenInstagram = (url) => {
+    const instagramUrl = `instagram://share?url=${encodeURIComponent(url)}`;
+    Linking.openURL(instagramUrl).catch(() =>
+      Alert.alert(
+        "Instagram Not Installed",
+        "Please install Instagram to share."
+      )
+    );
+  };
+
+  // Open Facebook via Expo Linking
+  const handleOpenFacebook = (url) => {
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      url
+    )}`;
+    Linking.openURL(facebookUrl).catch(() =>
+      Alert.alert("Error", "Unable to open Facebook.")
+    );
+  };
+
   const shareOptions = [
-    { name: "Copy Link", icon: "link.circle", onPress: () => {} },
-    { name: "Message", icon: "message.circle", onPress: () => {} },
-    { name: "Instagram", icon: "logo.instagram", onPress: () => {} },
-    { name: "Facebook", icon: "logo.facebook", onPress: () => {} },
-    { name: "Snapchat", icon: "logo.snapchat", onPress: () => {} },
+    {
+      name: "Copy Link",
+      icon: "link.circle",
+      onPress: () => handleCopyLink(collageData.coverImage),
+    },
+    {
+      name: "Message",
+      icon: "message.circle",
+      onPress: () => handleShareCollage(collageData.coverImage),
+    },
+    {
+      name: "Instagram",
+      icon: "logo.instagram",
+      onPress: () => handleOpenInstagram(collageData.coverImage),
+    },
+    {
+      name: "Facebook",
+      icon: "logo.facebook",
+      onPress: () => handleOpenFacebook(collageData.coverImage),
+    },
   ];
 
   return (
