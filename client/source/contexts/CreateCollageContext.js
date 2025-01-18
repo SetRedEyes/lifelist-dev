@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext } from "react";
-import { useAdminProfile } from "./AdminProfileContext"; // Import AdminProfileContext
 
 // CreateCollageContext definition
 const CreateCollageContext = createContext();

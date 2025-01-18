@@ -36,8 +36,8 @@ export default function EditMedia() {
 
   // Query to fetch CameraShot details by image URLs
   const { data, loading, error } = useQuery(GET_CAMERA_SHOTS_BY_IMAGES, {
-    variables: { images: params.collageData.images },
-    skip: !params?.collageData?.images?.length,
+    variables: { images: params.collage.images },
+    skip: !params?.collage?.images?.length,
   });
 
   // Preload existing collage data with fetched images
@@ -46,10 +46,10 @@ export default function EditMedia() {
       const selectedImages = data.getCameraShotsByImages;
       updateCollage({
         _id: params.collageId,
-        caption: params.collageData.caption,
+        caption: params.collage.caption,
         images: selectedImages,
-        coverImage: params.collageData.coverImage,
-        taggedUsers: params.collageData.taggedUsers || [],
+        coverImage: params.collage.coverImage,
+        taggedUsers: params.collage.taggedUsers || [],
       });
     }
   }, [data]);

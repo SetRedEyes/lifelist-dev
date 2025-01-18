@@ -22,7 +22,6 @@ import { useAuth } from "../../../contexts/AuthContext";
 
 export default function EditPreview() {
   const navigation = useNavigation();
-  const { params } = useRoute();
   const { updateCollageInProfile } = useAdminProfile();
   const { collage, resetCollage, collages, currentIndex } =
     useCreateCollageContext();
@@ -54,13 +53,15 @@ export default function EditPreview() {
         });
         resetCollage();
 
-        // ✅ Use context values instead of navigation params
-        navigation.navigate("CollageStack", {
-          screen: "ViewCollage",
-          params: {
-            collages,
-            initialIndex: currentIndex,
-          },
+        // Navigate back to MainFeed with the correct index
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: "MainFeed",
+              params: { initialIndex: currentIndex, collages },
+            },
+          ],
         });
       } else {
         Alert.alert("Error", "Failed to update the collage.");

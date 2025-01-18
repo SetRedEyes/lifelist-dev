@@ -83,7 +83,8 @@ export default function SignUp() {
       setVerificationId(confirmation.verificationId);
 
       // Step 3: Update profile with phone number
-      updateProfile("phoneNumber", fullPhoneNumber);
+      // updateProfile("phoneNumber", fullPhoneNumber);
+      updateProfile("phoneNumber", cleanedPhoneNumber);
 
       // Step 4: Navigate to VerifyAccount screen with verificationId
       navigation.navigate("VerifyAccount", {

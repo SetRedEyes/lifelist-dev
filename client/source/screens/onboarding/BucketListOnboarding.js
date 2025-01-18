@@ -14,7 +14,6 @@ export default function BucketListOnboarding() {
 
   // Animation values
   const opacityValue = useRef(new Animated.Value(0)).current;
-  const slideUpValue = useRef(new Animated.Value(50)).current;
   const contentOpacityValue = useRef(new Animated.Value(0)).current;
 
   // State to control the animation flow
@@ -29,16 +28,16 @@ export default function BucketListOnboarding() {
         duration: 1000,
         useNativeDriver: true,
       }),
-      Animated.timing(slideUpValue, {
-        toValue: -50,
+      Animated.timing(opacityValue, {
+        toValue: 0,
         duration: 800,
         useNativeDriver: true,
+        delay: 500, // Wait before fading out
       }),
       Animated.timing(contentOpacityValue, {
         toValue: 1,
         duration: 800,
         useNativeDriver: true,
-        delay: 500, // Delay the content fade-in until after the Welcome animation
       }),
     ]).start(() => setIsWelcomeAnimationDone(true));
   }, []);
@@ -67,15 +66,14 @@ export default function BucketListOnboarding() {
             styles.welcomeContainer,
             {
               opacity: opacityValue,
-              transform: [{ translateY: slideUpValue }],
             },
           ]}
         >
-          <Text style={styles.welcomeText}>Welcome to</Text>
-          <Image
-            source={require("../../../assets/branding/lifelist-text.png")}
+          {/* <Image
+            source={require("../../../assets/branding/lifelist-icon.png")}
             style={styles.imageText}
-          />
+          /> */}
+          <Text style={styles.welcomeText}>Profile Completed</Text>
         </Animated.View>
       )}
 
@@ -148,13 +146,13 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     color: "#fff",
-    fontSize: 36,
+    fontSize: 12,
     fontWeight: "700",
+    marginTop: 24,
   },
   imageText: {
-    width: 224,
-    height: 53,
-    marginTop: 8,
+    width: 216,
+    height: 180,
   },
   contentContainer: {
     flex: 1,

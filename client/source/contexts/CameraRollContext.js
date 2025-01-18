@@ -5,6 +5,7 @@ import {
   GET_CAMERA_SHOT,
 } from "../utils/queries/cameraQueries";
 import { DELETE_CAMERA_SHOT } from "../utils/mutations/cameraMutations";
+import LRUCache from "../utils/caching/lruCacheHelper";
 
 const CameraRollContext = createContext();
 
@@ -12,6 +13,9 @@ export const CameraRollProvider = ({ children }) => {
   const [shots, setShots] = useState([]);
   const [nextCursor, setNextCursor] = useState(null);
   const [hasNextPage, setHasNextPage] = useState(true);
+
+  // Initialize LRU Cache for full-resolution images (max 20 items)
+  const fullResolutionCache = new LRUCache(20);
 
   const { refetch: fetchShots } = useQuery(GET_ALL_CAMERA_SHOTS, {
     skip: true, // Use refetch for manual invocation
@@ -25,7 +29,6 @@ export const CameraRollProvider = ({ children }) => {
     if (!hasNextPage) return;
 
     try {
-      // Correct refetch call: Pass variables directly
       const { data } = await fetchShots({
         cursor: nextCursor,
         limit: 12,
@@ -42,7 +45,6 @@ export const CameraRollProvider = ({ children }) => {
         hasNextPage: newHasNextPage,
       } = data.getAllCameraShots;
 
-      // Remove duplicates by creating a map of unique `_id`
       const mergedShots = Array.from(
         new Map(
           [...shots, ...newShots].map((shot) => [shot._id, shot])
@@ -60,9 +62,23 @@ export const CameraRollProvider = ({ children }) => {
   // === Fetch Full-Resolution Image ===
   const fetchFullResolutionImage = async (shotId) => {
     try {
+      if (fullResolutionCache.has(shotId)) {
+        console.log(`Cache hit for ${shotId}`);
+        return fullResolutionCache.get(shotId);
+      }
+
+      console.log(`Cache miss for ${shotId}, fetching from server...`);
       const { data } = await fetchShot({ variables: { shotId } });
       if (!data?.getCameraShot) throw new Error("Image not found.");
-      return data.getCameraShot.image;
+
+      const image = data.getCameraShot.image;
+      fullResolutionCache.put(shotId, image);
+
+      console.log(
+        "Current Full-Resolution Cache:",
+        Array.from(fullResolutionCache.cache.entries())
+      );
+      return image;
     } catch (error) {
       console.error(
         `[CameraRoll] Error fetching full-resolution image for ${shotId}:`,
@@ -70,6 +86,24 @@ export const CameraRollProvider = ({ children }) => {
       );
       return null;
     }
+  };
+
+  // === Preload Full-Resolution Images ===
+  const preloadFullResolutionImages = async (index, range = 2) => {
+    const preloadPromises = [];
+
+    for (
+      let i = Math.max(index - range, 0);
+      i <= Math.min(index + range, shots.length - 1);
+      i++
+    ) {
+      const shot = shots[i];
+      if (shot && !fullResolutionCache.has(shot._id)) {
+        preloadPromises.push(fetchFullResolutionImage(shot._id));
+      }
+    }
+
+    await Promise.all(preloadPromises); // Fetch all images in parallel
   };
 
   // === Add Shot to Camera Roll ===
@@ -100,6 +134,9 @@ export const CameraRollProvider = ({ children }) => {
           `Failed to delete shot ${shotId}: ${data?.deleteCameraShot?.message}`
         );
       }
+
+      // Remove the image from the cache
+      fullResolutionCache.cache.delete(shotId);
     } catch (error) {
       console.error(`[CameraRoll] Error removing shot ${shotId}:`, error);
     }
@@ -110,6 +147,7 @@ export const CameraRollProvider = ({ children }) => {
     setShots([]);
     setNextCursor(null);
     setHasNextPage(true);
+    fullResolutionCache.cache.clear(); // Clear the cache
   };
 
   const contextValue = {
@@ -117,6 +155,7 @@ export const CameraRollProvider = ({ children }) => {
     hasNextPage,
     loadNextPage,
     fetchFullResolutionImage,
+    preloadFullResolutionImages,
     addShotToRoll,
     removeShotFromRoll,
     resetCameraRollState,

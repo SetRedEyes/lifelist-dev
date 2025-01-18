@@ -6,7 +6,6 @@ import {
   FlatList,
   ActivityIndicator,
   Dimensions,
-  ScrollView,
   RefreshControl,
   Pressable,
   Animated,
@@ -437,7 +436,11 @@ export default function Explore({ navigation }) {
               onEndReachedThreshold={0.8}
               style={{ marginHorizontal: 8 }}
               ListFooterComponent={
-                userLoading && <ActivityIndicator size="small" color="#fff" />
+                userLoading && (
+                  <View style={{ marginTop: 32 }}>
+                    <ActivityIndicator size="small" color="#6AB952" />
+                  </View>
+                )
               }
               showsVerticalScrollIndicator={false}
             />

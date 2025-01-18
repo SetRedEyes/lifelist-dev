@@ -54,8 +54,10 @@ export default function ViewShot() {
         const newIndex = viewableItems[0].index;
         setCurrentIndex(newIndex);
 
+        // Preload images around the current index
         await preloadFullResolutionImages(newIndex);
 
+        // Set the current shot (use cache if available)
         const shot = shots[newIndex];
         if (shot) {
           const fullResolutionImage = await fetchFullResolutionImage(shot._id);

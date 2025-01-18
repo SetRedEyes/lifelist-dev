@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  FlatList,
-  View,
-  StyleSheet,
-  ActivityIndicator,
-  Text,
-} from "react-native";
+import { FlatList, View, StyleSheet, Text } from "react-native";
 import CollageCard from "../../../cards/collage/CollageCard";
 import { containerStyles } from "../../../styles/components";
 

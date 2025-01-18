@@ -8,6 +8,7 @@ export const GET_MAIN_FEED = gql`
       collages {
         _id
         images
+        coverImage
         caption
         createdAt
         author {

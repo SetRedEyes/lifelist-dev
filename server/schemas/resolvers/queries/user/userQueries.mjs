@@ -189,19 +189,19 @@ export const getCollagesRepostsMoments = async (
         path: "collages",
         match: {
           archived: false,
-          ...(collagesCursor && { _id: { $gt: collagesCursor } }), // Pagination filter
+          ...(collagesCursor && { _id: { $lt: collagesCursor } }), // Pagination filter
         },
-        options: { sort: { _id: 1 }, limit: limit + 1 },
-        select: "_id coverImage",
+        options: { sort: { createdAt: -1 }, limit: limit + 1 }, // Most recent collages first
+        select: "_id coverImage createdAt",
       })
       .populate({
         path: "repostedCollages",
         match: {
           archived: false,
-          ...(repostsCursor && { _id: { $gt: repostsCursor } }),
+          ...(repostsCursor && { _id: { $lt: repostsCursor } }), // Pagination filter
         },
-        options: { sort: { _id: 1 }, limit: limit + 1 },
-        select: "_id coverImage",
+        options: { sort: { createdAt: -1 }, limit: limit + 1 }, // Most recent reposts first
+        select: "_id coverImage createdAt",
       })
       .populate({
         path: "moments",

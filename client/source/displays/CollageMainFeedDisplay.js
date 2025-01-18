@@ -219,13 +219,13 @@ export default function CollageMainFeedDisplay({
       {isAuthor ? (
         <AuthorCollageOptions
           visible={showOptions}
-          onRequestClose={() => setShowOptions(false)}
-          collageId={collage._id}
-          isArchived={isArchived}
-          handleArchivePress={handleArchivePress}
           collage={collage}
+          collageId={collage._id}
           collages={collages}
           currentIndex={currentIndex}
+          onRequestClose={() => setShowOptions(false)}
+          isArchived={isArchived}
+          handleArchivePress={handleArchivePress}
         />
       ) : (
         <DefaultCollageOptions

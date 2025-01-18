@@ -122,7 +122,7 @@ export const getDevelopingCameraShots = async (_, __, { user }) => {
       path: "developingCameraShots",
       match: { transferredToRoll: false }, // Filter directly in the query
       select:
-        "_id image imageThumbnail capturedAt developingTime isDeveloped readyToReviewAt",
+        "_id image imageThumbnail capturedAt developingTime isDeveloped readyToReviewAt transferredToRoll",
     })
     .exec();
 

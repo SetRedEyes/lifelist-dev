@@ -21,7 +21,7 @@ export default function AuthorCollageOptions({
   visible,
   onRequestClose,
   collageId,
-  collageData,
+  collage,
   isArchived: initialIsArchived,
   isViewCollageScreen = false,
   currentIndex,
@@ -49,8 +49,8 @@ export default function AuthorCollageOptions({
           setIsArchived(false); // Update state
           addCollage({
             _id: collageId,
-            coverImage: collageData.coverImage,
-            createdAt: collageData.createdAt,
+            coverImage: collage.coverImage,
+            createdAt: collage.createdAt,
           });
         }
       } else {
@@ -132,22 +132,22 @@ export default function AuthorCollageOptions({
     {
       name: "Copy Link",
       icon: "link.circle",
-      onPress: () => handleCopyLink(collageData.coverImage),
+      onPress: () => handleCopyLink(collage.coverImage),
     },
     {
       name: "Message",
       icon: "message.circle",
-      onPress: () => handleShareCollage(collageData.coverImage),
+      onPress: () => handleShareCollage(collage.coverImage),
     },
     {
       name: "Instagram",
       icon: "logo.instagram",
-      onPress: () => handleOpenInstagram(collageData.coverImage),
+      onPress: () => handleOpenInstagram(collage.coverImage),
     },
     {
       name: "Facebook",
       icon: "logo.facebook",
-      onPress: () => handleOpenFacebook(collageData.coverImage),
+      onPress: () => handleOpenFacebook(collage.coverImage),
     },
   ];
 
@@ -166,7 +166,7 @@ export default function AuthorCollageOptions({
             onRequestClose();
             navigation.navigate("EditMedia", {
               collageId,
-              collageData,
+              collage,
               collages,
               currentIndex,
             });

@@ -197,14 +197,16 @@ export default function DevelopingDisplay() {
 
   const confirmDelete = async () => {
     try {
-      // Remove from DevelopingRoll
+      // Remove the shot from the Developing Roll
       const shotExists = developingShots.some((s) => s._id === shot._id);
       if (shotExists) {
         removeShot(shot._id);
       }
 
-      // Remove from CameraRoll
+      // Remove the shot from the Camera Roll
       await removeShotFromRoll(shot._id);
+
+      // Navigate back after deletion
       navigation.goBack();
     } catch (error) {
       console.error("Error deleting shot:", error);

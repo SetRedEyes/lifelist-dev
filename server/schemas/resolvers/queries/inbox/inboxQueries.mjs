@@ -108,6 +108,7 @@ export const getUserNotifications = async (_, __, { user }) => {
   const foundUser = await User.findById(user)
     .populate({
       path: "notifications",
+      options: { sort: { createdAt: -1 } }, // Sort notifications by most recent
       populate: {
         path: "sender",
         model: "User",

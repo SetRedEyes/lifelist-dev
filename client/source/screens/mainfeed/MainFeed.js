@@ -1,12 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   FlatList,
   StyleSheet,
   RefreshControl,
   Dimensions,
+  Pressable,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useQuery } from "@apollo/client";
@@ -26,12 +31,33 @@ export default function MainFeed() {
   const { currentUser } = useAuth();
   const tabBarHeight = useBottomTabBarHeight();
   const headerHeight = useHeaderHeight();
+  const route = useRoute();
+
+  // Ref for the FlatList
+  const flatListRef = useRef(null);
+
+  // Extract the initialIndex from navigation params
+  const initialIndex = route.params?.initialIndex || 0;
 
   // Calculate dynamic collage height
   const collageHeight = screenHeight - headerHeight - tabBarHeight;
 
   // State for refreshing
   const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const params = navigation
+        .getState()
+        .routes.find((route) => route.name === "MainFeed")?.params;
+
+      if (params?.refresh) {
+        refetch();
+        // Clear the refresh parameter to avoid repeated refreshes
+        navigation.setParams({ refresh: false });
+      }
+    }, [navigation, refetch])
+  );
 
   // Main feed query
   const { data, loading, error, fetchMore, refetch } = useQuery(GET_MAIN_FEED, {
@@ -42,17 +68,27 @@ export default function MainFeed() {
   const hasNextPage = data?.getMainFeed?.hasNextPage || false;
   const nextCursor = data?.getMainFeed?.nextCursor || null;
 
+  // Scroll to top and refetch handler
+  const handleLogoPress = useCallback(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+    }
+    refetch();
+  }, [refetch]);
+
   // Configure the header options
   useEffect(() => {
     navigation.setOptions({
       headerTitle: "",
       headerLeft: () => (
         <View style={headerStyles.headerLeft}>
-          <Image
-            source={require("../../../assets/branding/lifelist-text.png")}
-            style={headerStyles.logo}
-            resizeMode="contain"
-          />
+          <Pressable onPress={handleLogoPress}>
+            <Image
+              source={require("../../../assets/branding/lifelist-text.png")}
+              style={headerStyles.logo}
+              resizeMode="contain"
+            />
+          </Pressable>
         </View>
       ),
       headerRight: () => (
@@ -81,7 +117,7 @@ export default function MainFeed() {
         backgroundColor: "#121212",
       },
     });
-  }, [navigation]);
+  }, [navigation, handleLogoPress]);
 
   // Handle load more
   const handleLoadMore = useCallback(() => {
@@ -119,7 +155,7 @@ export default function MainFeed() {
         <CollageMainFeedDisplay
           collage={item}
           hasParticipants={item.hasParticipants}
-          isAuthor={currentUser._id === item.author._id}
+          isAuthor={currentUser === item.author._id}
           collages={collages}
           currentIndex={index}
         />
@@ -135,6 +171,7 @@ export default function MainFeed() {
   return (
     <View style={layoutStyles.wrapper}>
       <FlatList
+        ref={flatListRef} // Attach the ref here
         data={collages}
         renderItem={renderCollage}
         keyExtractor={(item) => item._id}
@@ -143,6 +180,12 @@ export default function MainFeed() {
         snapToAlignment="start"
         snapToInterval={collageHeight}
         decelerationRate="fast"
+        initialScrollIndex={initialIndex}
+        getItemLayout={(data, index) => ({
+          length: collageHeight,
+          offset: collageHeight * index,
+          index,
+        })}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         refreshControl={
