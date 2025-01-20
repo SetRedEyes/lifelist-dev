@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Dimensions, FlatList, View, StyleSheet } from "react-native";
+import { FlatList, View, StyleSheet, Text } from "react-native";
 import { useQuery } from "@apollo/client";
 import CollageCard from "../../../cards/collage/CollageCard";
 import { GET_TAGGED_COLLAGES } from "../../../utils/queries/userQueries";
-import { layoutStyles } from "../../../styles/components";
+import { layoutStyles, containerStyles } from "../../../styles/components";
 
-const { height: screenHeight } = Dimensions.get("window");
 const PAGE_SIZE = 24;
 
 export default function Tagged() {
@@ -17,7 +16,6 @@ export default function Tagged() {
     variables: { cursor, limit: PAGE_SIZE },
     fetchPolicy: "network-only",
     onCompleted: (fetchedData) => {
-      console.log("fetchedData:", fetchedData);
       const { collages, nextCursor, hasNextPage } =
         fetchedData.getTaggedCollages;
 
@@ -45,14 +43,12 @@ export default function Tagged() {
   };
 
   const renderCollageCard = ({ item, index }) => (
-    <View style={{ height: screenHeight }}>
-      <CollageCard
-        collageId={item._id}
-        path={item.coverImage}
-        index={index}
-        collages={taggedCollages}
-      />
-    </View>
+    <CollageCard
+      collageId={item._id}
+      path={item.coverImage}
+      index={index}
+      collages={taggedCollages}
+    />
   );
 
   return (
@@ -61,14 +57,25 @@ export default function Tagged() {
         data={taggedCollages}
         renderItem={renderCollageCard}
         keyExtractor={(item) => item._id.toString()}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        snapToAlignment="start"
-        snapToInterval={screenHeight}
-        decelerationRate="fast"
+        numColumns={3} // Display 3 items per row
+        columnWrapperStyle={styles.columnWrapper} // Apply styles to rows
         onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={0.5} // Trigger load more when halfway down
+        ListEmptyComponent={
+          <View style={containerStyles.emptyContainer}>
+            <Text style={containerStyles.emptyText}>
+              No tagged collages to display.
+            </Text>
+          </View>
+        }
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  columnWrapper: {
+    justifyContent: "flex-start",
+    marginHorizontal: 0, // Add spacing between columns
+  },
+});

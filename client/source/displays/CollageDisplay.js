@@ -31,7 +31,6 @@ import { useAdminProfile } from "../contexts/AdminProfileContext";
 import AuthorCollageOptions from "../menus/collage/AuthorCollageOptions";
 import DefaultCollageOptions from "../menus/collage/DefaultCollageOptions";
 import { symbolStyles } from "../styles/components/symbolStyles";
-import SmallGreyButton from "../buttons/SmallGreyButton";
 import CollageButton from "../buttons/CollageButton";
 
 const { width, height } = Dimensions.get("window");
@@ -78,6 +77,8 @@ export default function CollageDisplay({
         isRepostedByCurrentUser,
         isSavedByCurrentUser,
       } = data.markCollageViewedAndGetCollageById;
+
+      console.log(collage);
 
       setIsLiked(isLikedByCurrentUser);
       setIsReposted(isRepostedByCurrentUser);

@@ -202,6 +202,8 @@ export default function EditContact() {
               placeholder="Enter your current password"
               placeholderTextColor="#d4d4d4"
               secureTextEntry
+              autoComplete="off"
+              textContentType="password"
             />
           </View>
 
@@ -215,6 +217,8 @@ export default function EditContact() {
               placeholder="Enter your new password"
               placeholderTextColor="#d4d4d4"
               secureTextEntry
+              autoComplete="off"
+              textContentType="newPassword"
             />
           </View>
 
@@ -228,6 +232,8 @@ export default function EditContact() {
               placeholder="Confirm your new password"
               placeholderTextColor="#d4d4d4"
               secureTextEntry
+              autoComplete="off"
+              textContentType="newPassword"
             />
           </View>
 

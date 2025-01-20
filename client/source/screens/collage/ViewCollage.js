@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, FlatList, StyleSheet, Dimensions } from "react-native";
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Dimensions,
+  PanResponder,
+} from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; // Safe area insets
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ButtonIcon from "../../icons/ButtonIcon";
 import CollageDisplay from "../../displays/CollageDisplay";
 import {
@@ -17,19 +23,34 @@ export default function ViewCollage() {
   const route = useRoute();
   const { collages, initialIndex } = route.params;
 
-  // Get dynamic heights
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
-
-  // Calculate dynamic content height
   const contentHeight =
     Dimensions.get("window").height - headerHeight - tabBarHeight;
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const flatListRef = useRef(null);
 
-  // Configure the header options
+  // PanResponder for edge swipe gesture
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: (evt, gestureState) => true,
+      onMoveShouldSetPanResponder: (evt, gestureState) => true,
+      onPanResponderMove: (evt, gestureState) => {
+        // Detect a left-edge swipe
+        if (
+          currentIndex === 0 &&
+          gestureState.dx > 50 &&
+          gestureState.moveX < 50
+        ) {
+          navigation.goBack();
+        }
+      },
+      onPanResponderRelease: () => {}, // Optional: Reset state after release
+    })
+  ).current;
+
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -44,7 +65,6 @@ export default function ViewCollage() {
           <ButtonIcon
             name="chevron.backward"
             weight="medium"
-            // IF IT'S FROM THE EDITCOLLAGE SEQUENCE IT SHOULD NAVIGATE TO THE ADMINPROFILE
             onPress={() => navigation.goBack()}
             style={symbolStyles.backArrow}
           />
@@ -53,19 +73,15 @@ export default function ViewCollage() {
     });
   }, [navigation, currentIndex]);
 
-  // Handle viewable items changed
   const handleViewableItemsChanged = useCallback(({ viewableItems }) => {
     if (viewableItems.length > 0) {
       setCurrentIndex(viewableItems[0].index);
     }
   }, []);
 
-  // FlatList viewability configuration
   const viewabilityConfig = {
-    itemVisiblePercentThreshold: 75, // Consider the item as "viewable" if 50% is visible
+    itemVisiblePercentThreshold: 75,
   };
-
-  console.log(currentIndex);
 
   const renderCollage = useCallback(
     ({ item }) => (
@@ -82,7 +98,7 @@ export default function ViewCollage() {
   );
 
   return (
-    <View style={layoutStyles.wrapper}>
+    <View style={layoutStyles.wrapper} {...panResponder.panHandlers}>
       <FlatList
         ref={flatListRef}
         data={collages}

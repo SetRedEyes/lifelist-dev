@@ -18,21 +18,17 @@ import { CREATE_CAMERA_SHOT } from "../../utils/mutations/cameraMutations";
 import { useLazyQuery, useMutation } from "@apollo/client";
 import { useDevelopingRoll } from "../../contexts/DevelopingRollContext";
 import MessageAlert from "../../alerts/MessageAlert";
-import {
-  saveMetadataToCache,
-  getMetadataFromCache,
-} from "../../utils/caching/cacheHelpers";
 import * as ImageManipulator from "expo-image-manipulator";
 import { headerStyles, layoutStyles } from "../../styles/components/index";
-import { useFocusEffect } from "@react-navigation/native";
+import { LUTShader } from "../../utils/LUTS/LUTShader";
+import { GLView } from "expo-gl";
+import { Surface } from "gl-react-expo";
+import { usePreloadedLUTs } from "../../utils/LUTS/usePreloadedLUTs";
 
 const screenWidth = Dimensions.get("window").width;
 const cameraHeight = (screenWidth * 3) / 2;
-const MAX_SHOTS_PER_DAY = 10;
-const SHOTS_LEFT_KEY = "shotsLeft";
 
 export default function Camera({ navigation }) {
-  const [shotsLeft, setShotsLeft] = useState(MAX_SHOTS_PER_DAY);
   const [showCameraOptions, setShowCameraOptions] = useState(false);
   const [cameraType, setCameraType] = useState("Standard");
   const [facing, setFacing] = useState("back");
@@ -43,36 +39,25 @@ export default function Camera({ navigation }) {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const blurAnim = useRef(new Animated.Value(0)).current;
 
-  // Fetch cached values on component mount
-  useEffect(() => {
-    const fetchCacheValues = async () => {
-      try {
-        // Fetch cameraType
-        const cachedCameraType = await getMetadataFromCache("cameraType", true);
-        if (cachedCameraType) setCameraType(cachedCameraType);
-
-        // Fetch cameraFacing
-        const cachedFacing = await getMetadataFromCache("cameraFacing", true);
-        if (cachedFacing) setFacing(cachedFacing);
-
-        // Fetch cameraFlash
-        const cachedFlash = await getMetadataFromCache("cameraFlash", true);
-        if (cachedFlash) setFlash(cachedFlash);
-      } catch (error) {
-        console.error("Error fetching camera settings from cache:", error);
-      }
-    };
-
-    fetchCacheValues();
-  }, []);
+  // Preload LUTs
+  const lutTextures = usePreloadedLUTs();
 
   const {
-    developingShots,
+    shotsLeft, // Access shotsLeft from context
     addShot,
+    decrementShotsLeft,
     initializeDevelopingRoll,
     isDevelopingRollCacheInitialized,
   } = useDevelopingRoll();
 
+  // Initialize DevelopingRollContext cache
+  useEffect(() => {
+    if (!isDevelopingRollCacheInitialized) {
+      initializeDevelopingRoll();
+    }
+  }, [isDevelopingRollCacheInitialized]);
+
+  // Set up navigation header
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -103,16 +88,9 @@ export default function Camera({ navigation }) {
         </View>
       ),
     });
-  }, [
-    navigation,
-    cameraType,
-    showCameraOptions,
-    handleShowCameraOptions,
-    shotsLeft,
-  ]);
+  }, [navigation, cameraType, showCameraOptions, shotsLeft]);
 
   useEffect(() => {
-    // Animate the rotation based on the popup visibility
     Animated.timing(rotateAnim, {
       toValue: showCameraOptions ? 1 : 0,
       duration: 300,
@@ -124,94 +102,45 @@ export default function Camera({ navigation }) {
     setShowCameraOptions((prev) => !prev);
   }, []);
 
-  /* const handleShowCameraOptions = () => setShowCameraOptions((prev) => !prev); */
-
-  // Save camera metadata
   const toggleFacing = () => {
     const newFacing = facing === "back" ? "front" : "back";
     setFacing(newFacing);
-    saveMetadataToCache("cameraFacing", newFacing, false); // Temporary cache
   };
 
   const toggleFlash = () => {
     const newFlash = flash === "off" ? "on" : "off";
     setFlash(newFlash);
-    saveMetadataToCache("cameraFlash", newFlash, false); // Temporary cache
   };
 
   const handleSetCameraType = (type) => {
     setCameraType(type);
-    saveMetadataToCache("cameraType", type, true); // Persistent cache
   };
 
-  useEffect(() => {
-    const loadCameraType = async () => {
-      const storedCameraType = await getFromAsyncStorage("cameraType");
-      if (storedCameraType) {
-        setCameraType(storedCameraType);
-      }
-    };
-    loadCameraType();
-  }, []);
-
-  // Initialize DevelopingRollContext Cache
-  useEffect(() => {
-    if (!isDevelopingRollCacheInitialized) {
-      initializeDevelopingRoll();
-    }
-  }, [isDevelopingRollCacheInitialized]);
-
-  useEffect(() => {
-    const loadCacheAndCalculateShots = async () => {
-      if (!isDevelopingRollCacheInitialized) {
-        await initializeDevelopingRoll();
-      }
-    };
-
-    loadCacheAndCalculateShots();
-  }, [isDevelopingRollCacheInitialized, developingShots]);
-
-  // Helper to calculate the TTL until midnight
-  const getTimeUntilMidnight = () => {
-    const now = new Date();
-    const midnight = new Date();
-    midnight.setHours(24, 0, 0, 0); // Set to midnight of the next day
-    return midnight.getTime() - now.getTime();
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      const checkShotsCache = async () => {
-        const cachedShotsLeft = await getMetadataFromCache(
-          SHOTS_LEFT_KEY,
-          true
-        );
-
-        // If TTL has expired or there's no cache, reset shotsLeft
-        if (cachedShotsLeft === null) {
-          const ttl = getTimeUntilMidnight();
-          await saveMetadataToCache(
-            SHOTS_LEFT_KEY,
-            MAX_SHOTS_PER_DAY,
-            true,
-            ttl
-          );
-          setShotsLeft(MAX_SHOTS_PER_DAY);
-        } else {
-          setShotsLeft(cachedShotsLeft);
-        }
-      };
-
-      checkShotsCache();
-    }, [])
-  );
-
-  // CAMERA SHOT CREATION
   const [createCameraShot] = useMutation(CREATE_CAMERA_SHOT);
   const [getPresignedUrl] = useLazyQuery(GET_PRESIGNED_URL);
 
+  /*   useEffect(() => {
+    if (lutTextures.length > 0) {
+      setAreLUTsLoaded(true); // LUTs are loaded
+    }
+  }, [lutTextures]); */
+
+  const getLUTIndex = (type) => {
+    switch (type) {
+      case "Standard":
+        return 0;
+      case "Disposable":
+        return 1;
+      case "Kodak":
+        return 2;
+      default:
+        return 0; // Default to Standard LUT
+    }
+  };
+
   const handleTakePhoto = async () => {
     setIsProcessing(true);
+    console.log("Starting photo capture...");
 
     if (shotsLeft <= 0) {
       alert("No shots left for today!");
@@ -219,47 +148,138 @@ export default function Camera({ navigation }) {
       return;
     }
 
-    // Immediately decrement shotsLeft and update cache
-    const newShotsLeft = shotsLeft - 1;
-    setShotsLeft(newShotsLeft);
-
     try {
-      await saveMetadataToCache(SHOTS_LEFT_KEY, newShotsLeft, true);
+      console.log("Decrementing shots left...");
+      await decrementShotsLeft();
 
       if (cameraRef.current) {
         try {
-          // Capture the photo
+          console.log("Capturing photo...");
           const photo = await cameraRef.current.takePictureAsync({
             quality: 1,
           });
+          console.log("Photo captured:", photo);
 
+          // Get the LUT index based on the selected camera type
+          const lutIndex = getLUTIndex(cameraType);
+          const lutUri = lutTextures[lutIndex];
+
+          console.log("Resizing photo...");
           const resizedUri = await resizeImage(photo.uri, 1280, 1920);
-          const thumbnailUri = await resizeImage(photo.uri, 400, 600);
+          console.log("Photo resized to:", resizedUri);
 
-          // Upload the resized image and thumbnail
-          const newShot = await uploadShot(resizedUri, thumbnailUri);
+          console.log("Creating thumbnail...");
+          const thumbnailUri = await resizeImage(photo.uri, 400, 600);
+          console.log("Thumbnail created at:", thumbnailUri);
+
+          console.log("Uploading images...");
+          const newShot = await uploadShot(
+            processedMainUri,
+            processedThumbnailUri
+          );
+          console.log("New shot uploaded:", newShot);
 
           if (newShot) {
-            addShot(newShot);
+            addShot(newShot); // Add the new shot to developing roll
           }
         } catch (error) {
           console.error("Error taking photo:", error);
-
-          // Revert shotsLeft in case of an error
-          setShotsLeft(shotsLeft);
-          await saveMetadataToCache(SHOTS_LEFT_KEY, shotsLeft, true);
+          alert("Failed to capture the photo. Please try again.");
         }
       }
     } catch (error) {
-      console.error("Error updating shotsLeft cache:", error);
+      console.error("Error updating shotsLeft:", error);
       alert("Failed to update your shots. Please try again.");
     } finally {
+      console.log("Resetting processing state...");
       setIsProcessing(false);
-
-      // Show the alert message
       setMessageVisible(true);
       setTimeout(() => setMessageVisible(false), 1500);
     }
+  };
+
+  /* const handleTakePhoto = async () => {
+    setIsProcessing(true);
+    console.log("Starting photo capture...");
+
+    if (shotsLeft <= 0) {
+      alert("No shots left for today!");
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      console.log("Decrementing shots left...");
+      await decrementShotsLeft();
+
+      if (cameraRef.current) {
+        try {
+          console.log("Capturing photo...");
+          const photo = await cameraRef.current.takePictureAsync({
+            quality: 1,
+          });
+          console.log("Photo captured:", photo);
+
+          // Get the LUT index and URI
+          const lutIndex = getLUTIndex(cameraType);
+          const lutUri = lutTextures[lutIndex];
+
+          if (!lutUri) {
+            console.error(`No LUT URI found for camera type: ${cameraType}`);
+            setIsProcessing(false);
+            return;
+          }
+
+          console.log(`Using LUT: ${lutUri}`);
+
+          // Apply LUT to the captured image
+          console.log("Applying LUT to the image...");
+          const processedUri = await applyLUTToImage(photo.uri, lutUri);
+          console.log("Processed image URI:", processedUri);
+
+          console.log("Creating thumbnail...");
+          const thumbnailUri = await resizeImage(processedUri, 400, 600);
+          console.log("Thumbnail created at:", thumbnailUri);
+
+          console.log("Uploading images...");
+          const newShot = await uploadShot(processedUri, thumbnailUri);
+          console.log("New shot uploaded:", newShot);
+
+          if (newShot) {
+            addShot(newShot); // Add the new shot to developing roll
+          }
+        } catch (error) {
+          console.error("Error taking photo:", error);
+          alert("Failed to capture the photo. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error("Error updating shotsLeft:", error);
+      alert("Failed to update your shots. Please try again.");
+    } finally {
+      console.log("Resetting processing state...");
+      setIsProcessing(false);
+      setMessageVisible(true);
+      setTimeout(() => setMessageVisible(false), 1500);
+    }
+  }; */
+
+  const applyLUTToImage = async (imageUri) => {
+    const { uri: outputUri } = await GLView.takeSnapshotAsync(
+      <Surface style={{ width: 1280, height: 1920 }}>
+        <LUTShader
+          imageTexture={{ uri: imageUri }}
+          lutTexture={{ uri: lutUri }} // Default LUT
+          imageRatio={1} // Adjust as needed
+        />
+      </Surface>,
+      {
+        format: "png",
+        quality: 1,
+        result: "file", // Save result to a file
+      }
+    );
+    return outputUri;
   };
 
   const resizeImage = async (uri, width, height) => {
@@ -326,7 +346,6 @@ export default function Camera({ navigation }) {
     await fetch(presignedUrl, { method: "PUT", body: blob });
   };
 
-  // Animate blur overlay
   useEffect(() => {
     Animated.timing(blurAnim, {
       toValue: isProcessing ? 1 : 0,
@@ -343,7 +362,6 @@ export default function Camera({ navigation }) {
         facing={facing}
         flash={flash}
       />
-      {/* Loading Overlay */}
       {isProcessing && (
         <Animated.View
           style={{
@@ -360,7 +378,6 @@ export default function Camera({ navigation }) {
           <Text style={{ color: "#ffffff", marginTop: 16 }}>Processing...</Text>
         </Animated.View>
       )}
-      {/* Message Alert */}
       <MessageAlert
         message="Added to Developing Roll"
         visible={messageVisible}

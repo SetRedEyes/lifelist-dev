@@ -129,6 +129,7 @@ export default function AdminProfile() {
           />
         )}
         style={layoutStyles.container}
+        showsVerticalScrollIndicator={false}
       />
       <AdminProfileOptions
         visible={optionsPopupVisible}

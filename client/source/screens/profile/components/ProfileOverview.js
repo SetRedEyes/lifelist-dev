@@ -55,12 +55,10 @@ export default function ProfileOverview({
     try {
       if (profile?.isProfilePrivate) {
         await sendFollowRequest(userId);
-        Alert.alert("Request Sent", "Follow request sent.");
         setButtonState("Pending Request");
       } else {
         await followUser(userId);
         incrementFollowing();
-        Alert.alert("Followed", "You are now following this user.");
         setButtonState("Following");
       }
     } catch (error) {
@@ -78,7 +76,6 @@ export default function ProfileOverview({
     try {
       await unfollowUser(userId);
       decrementFollowing(); // ✅ Update following count
-      Alert.alert("Unfollowed", "You have unfollowed this user.");
       setButtonState("Follow");
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -93,7 +90,6 @@ export default function ProfileOverview({
     setIsProcessing(true);
     try {
       await unsendFollowRequest(userId);
-      Alert.alert("Request Withdrawn", "Follow request withdrawn.");
       setButtonState("Follow");
     } catch (error) {
       Alert.alert("Error", error.message);

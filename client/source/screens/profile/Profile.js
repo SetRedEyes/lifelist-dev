@@ -29,7 +29,8 @@ export default function Profile() {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const [optionsPopupVisible, setOptionsPopupVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [blockAlertVisible, setBlockAlertVisible] = useState(false); // Track DangerAlert visibility
+  const [blockAlertVisible, setBlockAlertVisible] = useState(false);
+  const [isVisitedUserBlocked, setIsVisitedUserBlocked] = useState(false);
 
   const { currentUser } = useAuth();
   const {
@@ -45,17 +46,22 @@ export default function Profile() {
     hasNextRepostsPage,
   } = useProfile();
 
-  console.log(profileData);
-
   const userId = route.params?.userId || currentUser;
   const isAdminView = currentUser && userId === currentUser;
 
   // Fetch profile data when userId changes or on mount
   useEffect(() => {
     if (userId) {
-      fetchUserProfile(userId); // Call the function from ProfileContext
+      fetchUserProfile(userId);
     }
   }, [userId]);
+
+  // Sync local blocked state with profile data
+  useEffect(() => {
+    if (profileData?.isVisitedUserBlocked !== undefined) {
+      setIsVisitedUserBlocked(profileData.isVisitedUserBlocked);
+    }
+  }, [profileData?.isVisitedUserBlocked]);
 
   // Toggle options popup visibility
   const toggleOptionsPopup = useCallback(() => {
@@ -94,7 +100,6 @@ export default function Profile() {
       ),
       headerRight: () => (
         <View style={headerStyles.headerRight}>
-          {/* Options Button */}
           <Animated.View style={{ transform: [{ rotate: rotation }] }}>
             <ButtonIcon
               name="ellipsis"
@@ -106,19 +111,12 @@ export default function Profile() {
         </View>
       ),
     });
-  }, [
-    navigation,
-    toggleOptionsPopup,
-    rotation,
-    profileData?.fullName,
-    setBlockAlertVisible,
-    blockAlertVisible,
-  ]);
+  }, [navigation, toggleOptionsPopup, rotation, profileData?.fullName]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await fetchUserProfile(userId); // Fetch updated profile data
+      await fetchUserProfile(userId); // Refetch profile data
     } finally {
       setRefreshing(false);
     }
@@ -136,14 +134,18 @@ export default function Profile() {
     }
   };
 
-  const handleBlockUser = () => {
-    blockUserMutation({ variables: { userIdToBlock: userId } });
+  const handleBlockUser = async () => {
+    setIsVisitedUserBlocked(true); // Optimistic UI update
+    await fetchUserProfile(userId); // Refetch profile data to ensure sync
     setBlockAlertVisible(false);
     setOptionsPopupVisible(false);
   };
 
-  const showPrivate =
-    profileData?.isProfilePrivate && !profileData?.isFollowing && !isAdminView;
+  const handleUnblockUser = async () => {
+    setIsVisitedUserBlocked(false); // Optimistic UI update
+    await fetchUserProfile(userId); // Refetch profile data to ensure sync
+    setOptionsPopupVisible(false);
+  };
 
   const renderContent = () => (
     <>
@@ -157,10 +159,26 @@ export default function Profile() {
         userId={userId}
         isAdminView={isAdminView}
       />
-      {showPrivate ? (
+      {profileData?.isBlockedByVisitedUser ? (
+        <View style={containerStyles.privateContainer}>
+          <Text style={containerStyles.privateText}>
+            You cannot view this profile because the user has blocked you.
+          </Text>
+        </View>
+      ) : isVisitedUserBlocked ? (
+        <View style={containerStyles.privateContainer}>
+          <Text style={[containerStyles.privateText, { marginHorizontal: 64 }]}>
+            You have blocked this user. Unblock them to view their profile.
+          </Text>
+        </View>
+      ) : profileData?.isProfilePrivate &&
+        !profileData?.isFollowing &&
+        !isAdminView ? (
         <View style={containerStyles.privateContainer}>
           <LockIcon borderColor="#696969" color="#696969" />
-          <Text style={containerStyles.privateText}>User is Private.</Text>
+          <Text style={containerStyles.privateText}>
+            This user’s profile is private.
+          </Text>
         </View>
       ) : (
         <ProfileNavigator
@@ -202,11 +220,13 @@ export default function Profile() {
           visible={optionsPopupVisible}
           onRequestClose={toggleOptionsPopup}
           profileId={userId}
+          isBlockedByCurrentUser={isVisitedUserBlocked}
           blockAlert={() => setBlockAlertVisible(true)}
+          unblockUser={handleUnblockUser}
+          refetchUserProfile={() => fetchUserProfile(userId)} // Pass refetch
         />
       )}
 
-      {/* DangerAlert */}
       <DangerAlert
         visible={blockAlertVisible}
         title="Block User?"

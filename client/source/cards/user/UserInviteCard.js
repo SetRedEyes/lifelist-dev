@@ -6,10 +6,6 @@ import SmallGreyButton from "../../buttons/SmallGreyButton";
 import { cardStyles } from "../../styles/components/cardStyles";
 
 export default function UserInviteCard({ contact }) {
-  const profilePictureUrl = contact.imageAvailable
-    ? contact.thumbnailPath
-    : null;
-
   // Invite via SMS
   const handleInvitePress = async () => {
     try {
@@ -39,9 +35,9 @@ export default function UserInviteCard({ contact }) {
   return (
     <Pressable onPress={handleInvitePress} style={cardStyles.listItemContainer}>
       <View style={cardStyles.contentContainer}>
-        {profilePictureUrl ? (
+        {contact.imageAvailable ? (
           <Image
-            source={{ uri: profilePictureUrl }}
+            source={{ uri: contact.image.uri }}
             style={cardStyles.imageMd}
           />
         ) : (

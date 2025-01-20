@@ -18,8 +18,7 @@ export default function ExperienceSelectCard({
 
   const imageUrl = experience.experience.image;
   const truncatedTitle = truncateText(experience.experience.title, 40);
-  const capitalizedCategory = capitalizeText(experience.experience.category);
-  const { _id, associatedShots } = experience;
+  const { associatedShots = [], _id } = experience; // Default to an empty array if undefined
 
   useEffect(() => {
     setIsShotAdded(associatedShots.some((shot) => shot._id === shotId));
@@ -27,31 +26,24 @@ export default function ExperienceSelectCard({
 
   const handleAddRemoveShot = async () => {
     try {
-      // Add or remove the shot with its details
       const updatedShots = isShotAdded
         ? associatedShots.filter((shot) => shot._id !== shotId)
         : [
             ...associatedShots,
             {
               _id: shotId,
-              image: currentShot?.image, // Include the full-resolution image
-              imageThumbnail: currentShot?.imageThumbnail, // Include the thumbnail
+              image: currentShot?.image,
+              imageThumbnail: currentShot?.imageThumbnail,
             },
           ];
 
-      console.log("experience._id,", experience._id);
-
-      // Construct the updated experience object
       const updatedExperience = {
-        associatedShots: updatedShots, // Update associated shots
-        lifeListExperienceId: experience._id, // Ensure lifeListExperienceId is passed
-        list: experience.list, // Ensure list type is included
+        associatedShots: updatedShots,
+        lifeListExperienceId: _id,
+        list: experience.list,
       };
 
-      // Call the update function
       await updateLifeListExperienceInCache(updatedExperience);
-
-      // Update local state
       setIsShotAdded(!isShotAdded);
     } catch (error) {
       console.error("Failed to update associated shots:", error);
@@ -60,24 +52,19 @@ export default function ExperienceSelectCard({
 
   const confirmRemoveShot = async () => {
     try {
-      // Filter out the shot to remove
       const updatedShots = associatedShots.filter(
         (shot) => shot._id !== shotId
       );
 
-      // Construct the updated experience object
       const updatedExperience = {
-        associatedShots: updatedShots, // Updated associated shots
-        lifeListExperienceId: experience._id, // Pass the correct experience ID
-        list: experience.list, // Ensure list type is included
+        associatedShots: updatedShots,
+        lifeListExperienceId: _id,
+        list: experience.list,
       };
 
-      // Call the update function with the updated experience object
       await updateLifeListExperienceInCache(updatedExperience);
-
-      // Update local state
-      setIsShotAdded(false); // Ensure the button reflects the removal
-      setIsAlertVisible(false); // Close the alert
+      setIsShotAdded(false);
+      setIsAlertVisible(false);
     } catch (error) {
       console.error("Failed to remove the shot:", error);
     }
@@ -87,9 +74,9 @@ export default function ExperienceSelectCard({
 
   const handleActionPress = () => {
     if (isShotAdded) {
-      setIsAlertVisible(true); // Show DangerAlert if removing
+      setIsAlertVisible(true);
     } else {
-      handleAddRemoveShot(); // Directly add the shot
+      handleAddRemoveShot();
     }
   };
 
@@ -103,7 +90,9 @@ export default function ExperienceSelectCard({
           {/* Text Content */}
           <View style={cardStyles.textContainer}>
             <Text style={cardStyles.primaryText}>{truncatedTitle}</Text>
-            <Text style={cardStyles.secondaryText}>{capitalizedCategory}</Text>
+            <Text style={cardStyles.secondaryText}>
+              Shots: {associatedShots.length} {/* Display shots count */}
+            </Text>
           </View>
 
           {/* Add/Remove Button */}

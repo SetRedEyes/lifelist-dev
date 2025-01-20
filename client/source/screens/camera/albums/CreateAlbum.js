@@ -183,6 +183,7 @@ export default function CreateAlbum() {
         columnWrapperStyle={styles.columnWrapper}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5} // Trigger loading closer to the bottom
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );

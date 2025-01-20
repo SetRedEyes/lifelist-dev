@@ -17,6 +17,7 @@ import { symbolStyles } from "../../../styles/components/symbolStyles";
 import ButtonIconWithLabel from "../../../icons/ButtonIconWithLabel";
 import * as Sharing from "expo-sharing";
 import { useAdminProfile } from "../../../contexts/AdminProfileContext";
+import * as FileSystem from "expo-file-system";
 
 const { width } = Dimensions.get("window");
 const aspectRatio = 3 / 2;
@@ -119,7 +120,10 @@ export default function ViewShot() {
   const handleCancelPostToMoment = () => setIsPostingToMoment(false);
 
   const handleSharePress = async () => {
-    if (!currentShot?.image) return;
+    if (!currentShot?.image) {
+      alert("No image to share.");
+      return;
+    }
 
     try {
       let imageUri = currentShot.image;
@@ -132,12 +136,13 @@ export default function ViewShot() {
         imageUri = uri;
       }
 
-      // Share the local image file
+      // Check if sharing is available
       if (await Sharing.isAvailableAsync()) {
+        // Share the local image file directly
         await Sharing.shareAsync(imageUri, {
-          mimeType: "image/jpeg",
+          mimeType: "image/jpeg", // Specify the image MIME type
           dialogTitle: "Share Camera Shot",
-          UTI: "public.jpeg",
+          UTI: "public.jpeg", // UTI for image sharing
         });
       } else {
         alert("Sharing is not available on this device.");
@@ -323,7 +328,6 @@ export default function ViewShot() {
                   height: 23.74,
                   width: 24,
                   marginTop: 2,
-                  marginRight: 2,
                 }}
               />
               <ButtonIconWithLabel

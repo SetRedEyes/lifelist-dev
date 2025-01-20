@@ -142,6 +142,8 @@ export default function EditProfileTab() {
               style={formStyles.input}
               placeholder="Enter your full name"
               placeholderTextColor="#d4d4d4"
+              autoComplete="off"
+              textContentType="name"
             />
           </View>
 
@@ -156,6 +158,8 @@ export default function EditProfileTab() {
               style={formStyles.input}
               placeholder="Enter your username"
               placeholderTextColor="#d4d4d4"
+              autoComplete="off"
+              textContentType="username"
             />
           </View>
 
@@ -169,6 +173,7 @@ export default function EditProfileTab() {
               placeholder="Tell us about yourself"
               placeholderTextColor="#d4d4d4"
               multiline
+              autoComplete="off"
             />
           </View>
 

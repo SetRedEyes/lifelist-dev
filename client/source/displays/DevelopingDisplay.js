@@ -24,6 +24,7 @@ import {
 } from "../styles/components";
 import { useCameraRoll } from "../contexts/CameraRollContext";
 import ButtonIcon from "../icons/ButtonIcon";
+import * as FileSystem from "expo-file-system";
 
 const threshold = 75; // Drag distance threshold
 
@@ -130,6 +131,10 @@ export default function DevelopingDisplay() {
   useEffect(() => {
     const transferShot = async () => {
       try {
+        // Check if the shot still exists in DevelopingRoll before transferring
+        const shotExists = developingShots.some((s) => s._id === shot._id);
+        if (!shotExists) return; // Skip if the shot has been deleted
+
         // Check if the shot already exists in Camera Roll
         const existingShot = shots.find((s) => s._id === shot._id);
         if (existingShot) return; // Prevent duplicate transfers
@@ -145,30 +150,67 @@ export default function DevelopingDisplay() {
           capturedAt: shot.capturedAt,
         });
 
-        // Remove from DevelopingRoll if it exists
-        const shotExists = developingShots.some((s) => s._id === shot._id);
-        if (shotExists) {
-          removeShot(shot._id);
-        }
+        // Remove from DevelopingRoll
+        removeShot(shot._id);
       } catch (error) {
         console.error("Error transferring shot:", error);
       }
     };
 
     if (shot) transferShot();
-  }, [shot, transferCameraShot, addShotToRoll, shots]);
+  }, [shot, transferCameraShot, addShotToRoll, developingShots, shots]);
 
   // === Actions ===
   const handleSharePress = async () => {
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(shot.image || shot.imageThumbnail);
-    } else {
-      alert("Sharing is not available.");
+    if (!currentShot?.image) {
+      alert("No image to share.");
+      return;
+    }
+
+    try {
+      let imageUri = currentShot.image;
+
+      // If the image is a remote URL, download it to a local file
+      if (imageUri.startsWith("http")) {
+        const fileName = imageUri.split("/").pop();
+        const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+        const { uri } = await FileSystem.downloadAsync(imageUri, fileUri);
+        imageUri = uri;
+      }
+
+      // Check if sharing is available
+      if (await Sharing.isAvailableAsync()) {
+        // Share the local image file directly
+        await Sharing.shareAsync(imageUri, {
+          mimeType: "image/jpeg", // Specify the image MIME type
+          dialogTitle: "Share Camera Shot",
+          UTI: "public.jpeg", // UTI for image sharing
+        });
+      } else {
+        alert("Sharing is not available on this device.");
+      }
+    } catch (error) {
+      console.error("Error sharing image:", error);
+      alert("Failed to share image.");
     }
   };
 
   const handlePostToMomentPress = () => {
     setIsPostingToMoment(true);
+  };
+
+  const handleExperiencePress = () => {
+    navigation.navigate("AddToExperiences", {
+      shotId: shot?._id,
+      currentShot: {
+        image: shot?.image,
+        imageThumbnail: shot?.imageThumbnail,
+      },
+    });
+  };
+
+  const handleAlbumPress = () => {
+    navigation.navigate("AddToAlbums", { shotId: shot?._id });
   };
 
   const handleConfirmPostToMoment = async () => {
@@ -264,11 +306,19 @@ export default function DevelopingDisplay() {
                 iconName="checkmark"
                 label="Confirm Moment"
                 onPress={handleConfirmPostToMoment}
+                style={{
+                  height: 25,
+                  width: 24.93,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="xmark"
                 label="Cancel"
                 onPress={handleCancelPostToMoment}
+                style={{
+                  height: 23,
+                  width: 22.49,
+                }}
               />
             </>
           ) : isAdditionalOptionsVisible ? (
@@ -276,21 +326,29 @@ export default function DevelopingDisplay() {
               <ButtonIconWithLabel
                 iconName="folder"
                 label="Album"
-                onPress={() =>
-                  navigation.navigate("AddToAlbum", { shotId: shot._id })
-                }
+                onPress={handleAlbumPress}
+                style={{
+                  height: 20.02,
+                  width: 25,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="star"
                 label="Experience"
-                onPress={() =>
-                  navigation.navigate("AddToExperience", { shotId: shot._id })
-                }
+                onPress={handleExperiencePress}
+                style={{
+                  height: 25.08,
+                  width: 25,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="arrow.left"
                 label="Back"
                 onPress={resetToMainButtons}
+                style={{
+                  height: 20.02,
+                  width: 25,
+                }}
               />
             </>
           ) : (
@@ -299,16 +357,29 @@ export default function DevelopingDisplay() {
                 iconName="paperplane"
                 label="Share"
                 onPress={handleSharePress}
+                style={{
+                  height: 23.74,
+                  width: 24,
+                  marginTop: 2,
+                }}
               />
               <ButtonIconWithLabel
-                iconName="rectangle.portrait"
+                iconName="rectangle.portrait.on.rectangle.portrait"
                 label="Post Moment"
                 onPress={handlePostToMomentPress}
+                style={{
+                  height: 25.5,
+                  width: 21.14,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="folder"
                 label="Add To"
                 onPress={handleAddToPress}
+                style={{
+                  height: 19.96,
+                  width: 25,
+                }}
               />
             </>
           )}

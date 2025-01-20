@@ -11,6 +11,7 @@ import ViewExperienceFeed from "../../screens/lifelist/experiences/ViewExperienc
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import ButtonIcon from "../../icons/ButtonIcon";
 import { symbolStyles } from "../../styles/components/symbolStyles";
+import CameraStack from "./CameraStack";
 
 const Stack = createStackNavigator();
 
@@ -148,6 +149,11 @@ export default function LifeListStack() {
         name="ViewExperienceFeed"
         component={ViewExperienceFeed}
         options={{ headerShown: true, title: "Experience Feed" }}
+      />
+      <Stack.Screen
+        name="CameraStack"
+        component={CameraStack}
+        options={{ headerShown: false, title: "Experience Feed" }}
       />
     </Stack.Navigator>
   );

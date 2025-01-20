@@ -25,6 +25,8 @@ export default function Overview() {
   const [captionText, setCaptionText] = useState(caption || "");
   const maxCharacters = 125;
 
+  console.log(currentCoverImage);
+
   const handleCaptionChange = (text) => {
     if (text.length <= maxCharacters) {
       setCaptionText(text);

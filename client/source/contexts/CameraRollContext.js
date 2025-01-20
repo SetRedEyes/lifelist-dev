@@ -122,16 +122,25 @@ export const CameraRollProvider = ({ children }) => {
     }
   };
 
-  // === Remove Shot from Camera Roll ===
+  // Remove a shot from the camera roll
   const removeShotFromRoll = async (shotId) => {
     try {
+      // Check if the shot exists in the roll before attempting removal
+      const shotExists = shots.some((shot) => shot._id === shotId);
+      if (!shotExists) {
+        console.warn(`[CameraRoll] Shot ${shotId} does not exist in the roll.`);
+        return;
+      }
+
+      // Remove the shot locally
       const updatedShots = shots.filter((shot) => shot._id !== shotId);
       setShots(updatedShots);
 
+      // Attempt to delete the shot from S3 using the mutation
       const { data } = await deleteCameraShot({ variables: { shotId } });
       if (!data?.deleteCameraShot?.success) {
-        console.error(
-          `Failed to delete shot ${shotId}: ${data?.deleteCameraShot?.message}`
+        console.warn(
+          `[CameraRoll] Failed to delete shot ${shotId} remotely: ${data?.deleteCameraShot?.message}`
         );
       }
 

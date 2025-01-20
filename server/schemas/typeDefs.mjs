@@ -577,7 +577,8 @@ type ExperienceDetails {
     isFollowRequested: Boolean
     hasActiveMoments: Boolean
     isProfilePrivate: Boolean
-    isBlocked: Boolean
+    isBlockedByVisitedUser:Boolean
+    isVisitedUserBlocked: Boolean
   }
 
   type UserCountsResponse {

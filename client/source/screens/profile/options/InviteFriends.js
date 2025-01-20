@@ -20,13 +20,19 @@ export default function InviteFriends() {
       }
 
       const { data } = await Contacts.getContactsAsync({
-        fields: [Contacts.Fields.PhoneNumbers],
+        fields: [
+          Contacts.Fields.PhoneNumbers,
+          Contacts.Fields.ImageAvailable,
+          Contacts.Fields.Image,
+        ],
       });
 
       if (data.length > 0) {
-        // Filter out contacts with no phone numbers
         const validContacts = data.filter((contact) => contact.phoneNumbers);
-        setContacts(validContacts);
+        const sortedContacts = validContacts.sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+        setContacts(sortedContacts);
       }
     })();
   }, []);
@@ -40,20 +46,20 @@ export default function InviteFriends() {
       )
   );
 
+  // Search handler
+  const handleSearch = () => {
+    console.log("Search submitted:", searchQuery);
+  };
+
+  // Focus change handler
+  const handleFocusChange = (isFocused) => {
+    console.log("Search bar focused:", isFocused);
+  };
+
   // Render each invite card
   const renderInviteFriendItem = ({ item }) => (
     <UserInviteCard contact={item} />
   );
-
-  // Handle search
-  const handleSearch = () => {
-    console.log("Search initiated for:", searchQuery);
-  };
-
-  // Handle focus change
-  const handleFocusChange = (isFocused) => {
-    console.log("SearchBar is focused:", isFocused);
-  };
 
   return (
     <View

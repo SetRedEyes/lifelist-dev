@@ -11,6 +11,7 @@ import * as Sharing from "expo-sharing";
 import { useAdminProfile } from "../../../contexts/AdminProfileContext";
 import { useAdminLifeList } from "../../../contexts/AdminLifeListContext";
 import { cameraStyles } from "../../../styles/screens/cameraStyles";
+import * as FileSystem from "expo-file-system";
 
 const { width } = Dimensions.get("window");
 const aspectRatio = 3 / 2;
@@ -160,16 +161,61 @@ export default function ViewExperienceFeed() {
 
   // Share shot logic
   const handleSharePress = async () => {
-    if (!currentShot?.image) return;
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(currentShot.image);
-    } else {
-      alert("Sharing is not available on this device.");
+    if (!currentShot?.image) {
+      alert("No image to share.");
+      return;
+    }
+
+    try {
+      let imageUri = currentShot.image;
+
+      // If the image is a remote URL, download it to a local file
+      if (imageUri.startsWith("http")) {
+        const fileName = imageUri.split("/").pop();
+        const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+        const { uri } = await FileSystem.downloadAsync(imageUri, fileUri);
+        imageUri = uri;
+      }
+
+      // Check if sharing is available
+      if (await Sharing.isAvailableAsync()) {
+        // Share the local image file directly
+        await Sharing.shareAsync(imageUri, {
+          mimeType: "image/jpeg", // Specify the image MIME type
+          dialogTitle: "Share Camera Shot",
+          UTI: "public.jpeg", // UTI for image sharing
+        });
+      } else {
+        alert("Sharing is not available on this device.");
+      }
+    } catch (error) {
+      console.error("Error sharing image:", error);
+      alert("Failed to share image.");
     }
   };
 
   // Navigation to additional options
   const handleAddToPress = () => setIsAdditionalOptionsVisible(true);
+
+  const handleAlbumPress = () => {
+    navigation.navigate("CameraStack", {
+      screen: "AddToAlbums", // Target screen within the CameraStack
+      params: { shotId: currentShot?._id }, // Pass parameters to AddToAlbums
+    });
+  };
+
+  const handleExperiencePress = () => {
+    navigation.navigate("CameraStack", {
+      screen: "AddToExperiences", // Target screen within the CameraStack
+      params: {
+        shotId: currentShot?._id,
+        currentShot: {
+          image: currentShot?.image,
+          imageThumbnail: currentShot?.imageThumbnail,
+        },
+      },
+    });
+  };
 
   // Reset to main buttons
   const resetToMainButtons = () => {
@@ -211,11 +257,19 @@ export default function ViewExperienceFeed() {
                 iconName="checkmark"
                 label="Confirm Moment"
                 onPress={handleConfirmPostToMoment}
+                style={{
+                  height: 25,
+                  width: 24.93,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="xmark"
                 label="Cancel"
                 onPress={handleCancelPostToMoment}
+                style={{
+                  height: 23,
+                  width: 22.49,
+                }}
               />
             </>
           ) : isAdditionalOptionsVisible ? (
@@ -223,12 +277,29 @@ export default function ViewExperienceFeed() {
               <ButtonIconWithLabel
                 iconName="folder"
                 label="Album"
-                onPress={handleAddToPress}
+                onPress={handleAlbumPress}
+                style={{
+                  height: 20.02,
+                  width: 25,
+                }}
+              />
+              <ButtonIconWithLabel
+                iconName="star"
+                label="Experience"
+                onPress={handleExperiencePress}
+                style={{
+                  height: 25.08,
+                  width: 25,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="arrow.left"
                 label="Back"
                 onPress={resetToMainButtons}
+                style={{
+                  height: 20.02,
+                  width: 25,
+                }}
               />
             </>
           ) : (
@@ -237,16 +308,29 @@ export default function ViewExperienceFeed() {
                 iconName="paperplane"
                 label="Share"
                 onPress={handleSharePress}
+                style={{
+                  height: 23.74,
+                  width: 24,
+                  marginTop: 2,
+                }}
               />
               <ButtonIconWithLabel
-                iconName="rectangle.portrait"
+                iconName="rectangle.portrait.on.rectangle.portrait"
                 label="Post Moment"
                 onPress={handlePostToMomentPress}
+                style={{
+                  height: 25.5,
+                  width: 21.14,
+                }}
               />
               <ButtonIconWithLabel
                 iconName="folder"
                 label="Add To"
                 onPress={handleAddToPress}
+                style={{
+                  height: 19.96,
+                  width: 25,
+                }}
               />
             </>
           )}

@@ -4,6 +4,7 @@ import {
   Text,
   View,
   StyleSheet,
+  Alert,
   ActivityIndicator,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -17,7 +18,10 @@ export default function DevelopingRoll() {
   const {
     developingShots,
     recalculateDevelopedStatus,
-    updateShot,
+    updateShot, // RESTORED updateShot function
+    removeShot, // Function to remove a shot from the roll
+    incrementShotsLeft, // Function to increment shotsLeft
+    shotsLeft, // Access shotsLeft from context
     initializeDevelopingRoll,
     isDevelopingRollCacheInitialized,
   } = useDevelopingRoll();
@@ -36,6 +40,22 @@ export default function DevelopingRoll() {
     }, [recalculateDevelopedStatus])
   );
 
+  // Handle retake functionality
+  const handleRetakeShot = async (shotId) => {
+    try {
+      // Remove the shot as a retake
+      await removeShot(shotId, true);
+
+      Alert.alert(
+        "Retake Ready",
+        "The shot has been removed, and a shot was added!"
+      );
+    } catch (error) {
+      console.error("Error during retake:", error);
+      Alert.alert("Error", "Failed to retake the shot. Please try again.");
+    }
+  };
+
   // Handle shot press: Navigate to DevelopingDisplay screen
   const handleShotPress = (shot) => {
     if (shot.isDeveloped) {
@@ -45,7 +65,7 @@ export default function DevelopingRoll() {
 
   // Handle shot developed action
   const handleShotDeveloped = (shotId) => {
-    updateShot(shotId, { isDeveloped: true });
+    updateShot(shotId, { isDeveloped: true }); // Marks the shot as developed
   };
 
   if (!isDevelopingRollCacheInitialized) {
@@ -67,8 +87,9 @@ export default function DevelopingRoll() {
           renderItem={({ item }) => (
             <CameraShotBlurredCard
               shot={item}
-              onShotDeveloped={handleShotDeveloped}
-              onPress={() => handleShotPress(item)}
+              onShotDeveloped={handleShotDeveloped} // Ensure developed status is handled
+              onRetake={() => handleRetakeShot(item._id)} // Pass retake functionality
+              onPress={() => handleShotPress(item)} // Navigate on press
             />
           )}
           keyExtractor={(item) => item._id}

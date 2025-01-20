@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-import { Dimensions, FlatList, View, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { FlatList, View, StyleSheet, Text } from "react-native";
 import { useQuery } from "@apollo/client";
 import { GET_ARCHIVED_COLLAGES } from "../../../utils/queries/userQueries";
 import CollageCard from "../../../cards/collage/CollageCard";
-import { layoutStyles } from "../../../styles/components/index";
+import { layoutStyles, containerStyles } from "../../../styles/components";
 
-const { height: screenHeight } = Dimensions.get("window");
 const PAGE_SIZE = 24;
 
 export default function Archived() {
@@ -13,29 +12,38 @@ export default function Archived() {
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
 
-  const { data, loading, fetchMore } = useQuery(GET_ARCHIVED_COLLAGES, {
-    variables: { cursor, limit: PAGE_SIZE },
-    fetchPolicy: "network-only",
-    onCompleted: (fetchedData) => {
-      console.log("fetchedData:", fetchedData);
+  const { data, loading, fetchMore, refetch } = useQuery(
+    GET_ARCHIVED_COLLAGES,
+    {
+      variables: { cursor, limit: PAGE_SIZE },
+      fetchPolicy: "network-only",
+      onCompleted: (fetchedData) => {
+        const { collages, nextCursor, hasNextPage } =
+          fetchedData.getArchivedCollages;
 
-      const { collages, nextCursor, hasNextPage } =
-        fetchedData.getArchivedCollages;
+        const newUniqueCollages = collages.filter(
+          (newCollage) =>
+            !archivedCollages.some(
+              (archived) => archived._id === newCollage._id
+            )
+        );
 
-      // Avoid duplicates by filtering new collages
-      const newUniqueCollages = collages.filter(
-        (newCollage) =>
-          !archivedCollages.some((archived) => archived._id === newCollage._id)
-      );
+        setArchivedCollages((prevCollages) => [
+          ...prevCollages,
+          ...newUniqueCollages,
+        ]);
+        setCursor(nextCursor);
+        setHasMore(hasNextPage);
+      },
+    }
+  );
 
-      setArchivedCollages((prevCollages) => [
-        ...prevCollages,
-        ...newUniqueCollages,
-      ]);
-      setCursor(nextCursor);
-      setHasMore(hasNextPage);
-    },
-  });
+  // Remove a collage from the archived list after unarchiving
+  const handleUnarchive = (collageId) => {
+    setArchivedCollages((prevCollages) =>
+      prevCollages.filter((collage) => collage._id !== collageId)
+    );
+  };
 
   const loadMore = async () => {
     if (hasMore && !loading) {
@@ -45,31 +53,41 @@ export default function Archived() {
     }
   };
 
-  const renderCollageCard = ({ item, index }) => (
-    <View style={{ height: screenHeight }}>
-      <CollageCard
-        collageId={item._id}
-        path={item.coverImage}
-        index={index}
-        collages={archivedCollages}
-      />
-    </View>
+  const renderCollageItem = ({ item, index }) => (
+    <CollageCard
+      collageId={item._id}
+      path={item.coverImage}
+      index={index}
+      collages={archivedCollages}
+      onUnarchive={() => handleUnarchive(item._id)} // Pass down the unarchive handler
+    />
   );
 
   return (
     <View style={layoutStyles.wrapper}>
       <FlatList
         data={archivedCollages}
-        renderItem={renderCollageCard}
+        renderItem={renderCollageItem}
         keyExtractor={(item) => item._id.toString()}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        snapToAlignment="start"
-        snapToInterval={screenHeight}
-        decelerationRate="fast"
+        numColumns={3}
+        columnWrapperStyle={styles.columnWrapper}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
+        ListEmptyComponent={
+          <View style={containerStyles.emptyContainer}>
+            <Text style={containerStyles.emptyText}>
+              No archived collages to display.
+            </Text>
+          </View>
+        }
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  columnWrapper: {
+    justifyContent: "flex-start",
+    marginHorizontal: 0,
+  },
+});

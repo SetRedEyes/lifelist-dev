@@ -162,6 +162,7 @@ export default function ManageAlbumShots() {
         ListFooterComponent={
           hasNextPage && <ActivityIndicator size="small" color="#6AB952" />
         }
+        showsVerticalScrollIndicator={false}
       />
       <DangerAlert
         visible={isAlertVisible}

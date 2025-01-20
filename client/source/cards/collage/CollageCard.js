@@ -20,6 +20,7 @@ export default function CollageCard({
   collages,
   cacheKeyPrefix,
   shouldCache = true,
+  onUnarchive,
 }) {
   const navigation = useNavigation();
   const [imageUri, setImageUri] = useState(null);
@@ -28,7 +29,7 @@ export default function CollageCard({
   const handlePress = () => {
     navigation.navigate("CollageStack", {
       screen: "ViewCollage",
-      params: { collages, initialIndex: index },
+      params: { collages, initialIndex: index, onUnarchive },
     });
   };
 

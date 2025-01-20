@@ -64,11 +64,11 @@ export default function CameraOptions({
         {/* Fuji */}
         <Pressable
           style={[menuStyles.cardContainer, menuStyles.flex]}
-          onPress={() => handleSelectCameraType("Fuji")}
+          onPress={() => handleSelectCameraType("Kodak")}
         >
           <View style={menuStyles.flexRow}>
             <Icon name="plus.circle" style={symbolStyles.popupIcon} />
-            <Text style={[menuStyles.spacer, menuStyles.popupText]}>Fuji</Text>
+            <Text style={[menuStyles.spacer, menuStyles.popupText]}>Kodak</Text>
           </View>
           <Icon
             name="chevron.forward"

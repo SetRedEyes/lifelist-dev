@@ -322,10 +322,11 @@ export default function Explore({ navigation }) {
     }, 25);
   };
 
-  // PanResponder for swipe gesture
+  // PanResponder for swipe-to-go-back
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: (_, gestureState) => {
-      return gestureState.dx > 0; // Start if the swipe is towards the right
+      // Detect swipe from the left side
+      return gestureState.dx > 0 && isSearchActive;
     },
     onPanResponderMove: (_, gestureState) => {
       if (gestureState.dx > 0) {
@@ -335,14 +336,15 @@ export default function Explore({ navigation }) {
     },
     onPanResponderRelease: (_, gestureState) => {
       if (gestureState.dx > screenWidth / 4) {
-        // Dismiss the view if swipe distance exceeds threshold
+        // Trigger go-back if swipe distance exceeds threshold
         Animated.timing(translateX, {
           toValue: screenWidth,
           duration: 300,
           useNativeDriver: true,
         }).start(() => {
-          setIsSearchActive(false);
-          setSearchQuery("");
+          setIsSearchActive(false); // Reset search state
+          setSearchQuery(""); // Clear search query
+          setUsers([]); // Reset user list
           translateX.setValue(0); // Reset position
         });
       } else {
@@ -398,7 +400,12 @@ export default function Explore({ navigation }) {
   return (
     <Pressable style={{ flex: 1, backgroundColor: "#121212" }}>
       {isSearchActive ? (
-        <>
+        <Animated.View
+          style={{
+            flex: 1,
+            transform: [{ translateX }], // Animate swipe
+          }}
+        >
           <ExploreNavigator activeTab={activeTab} setActiveTab={setActiveTab} />
           {searchQuery.trim() === "" ? (
             <FlatList
@@ -445,7 +452,7 @@ export default function Explore({ navigation }) {
               showsVerticalScrollIndicator={false}
             />
           )}
-        </>
+        </Animated.View>
       ) : (
         <View style={styles.content}>
           <FlatList

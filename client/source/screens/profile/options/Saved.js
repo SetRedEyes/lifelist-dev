@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Dimensions, FlatList, View, StyleSheet } from "react-native";
+import { FlatList, View, StyleSheet, Text } from "react-native";
 import { useQuery } from "@apollo/client";
 import { GET_SAVED_COLLAGES } from "../../../utils/queries/userQueries";
 import CollageCard from "../../../cards/collage/CollageCard";
-import { layoutStyles } from "../../../styles/components/index";
+import { layoutStyles, containerStyles } from "../../../styles/components";
 
-const { height: screenHeight } = Dimensions.get("window");
 const PAGE_SIZE = 24;
 
 export default function Saved() {
@@ -43,38 +42,40 @@ export default function Saved() {
     }
   };
 
-  const renderCollageCard = ({ item, index }) => (
-    <View style={{ height: screenHeight }}>
-      <CollageCard
-        collageId={item._id}
-        path={item.coverImage}
-        index={index}
-        collages={savedCollages}
-      />
-    </View>
+  const renderCollageItem = ({ item, index }) => (
+    <CollageCard
+      collageId={item._id}
+      path={item.coverImage}
+      index={index}
+      collages={savedCollages}
+    />
   );
 
   return (
     <View style={layoutStyles.wrapper}>
       <FlatList
         data={savedCollages}
-        renderItem={renderCollageCard}
+        renderItem={renderCollageItem}
         keyExtractor={(item) => item._id.toString()}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        snapToAlignment="start"
-        snapToInterval={screenHeight}
-        decelerationRate="fast"
+        numColumns={3} // Display 3 items per row
+        columnWrapperStyle={styles.columnWrapper} // Apply styles to rows
         onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={0.5} // Trigger load more when halfway down
+        ListEmptyComponent={
+          <View style={containerStyles.emptyContainer}>
+            <Text style={containerStyles.emptyText}>
+              No saved collages to display.
+            </Text>
+          </View>
+        }
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
+  columnWrapper: {
+    justifyContent: "flex-start",
+    marginHorizontal: 0, // Add spacing between columns
   },
 });

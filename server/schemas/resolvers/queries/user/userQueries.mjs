@@ -7,7 +7,7 @@ export const getUserProfileById = async (
   { user }
 ) => {
   try {
-    // Fetch user and relationships
+    // Fetch the user being visited and relationships
     const foundUser = await User.findById(userId)
       .populate({
         path: "collages",
@@ -36,10 +36,19 @@ export const getUserProfileById = async (
       throw new Error("User not found.");
     }
 
-    // Determine privacy and block status
-    const { settings, blocked } = foundUser;
-    const isProfilePrivate = settings?.isProfilePrivate || false;
-    const isBlocked = blocked.some((blockedUser) => blockedUser.equals(user));
+    // Check if the current user is blocked by the visited user
+    const isBlockedByVisitedUser = foundUser.blocked.some((blockedUserId) =>
+      blockedUserId.equals(user)
+    );
+
+    // Check if the current user has blocked the visited user
+    const isVisitedUserBlocked =
+      (await User.findById(user))?.blocked?.some((blockedUserId) =>
+        blockedUserId.equals(userId)
+      ) || false;
+
+    // Compute privacy status
+    const isProfilePrivate = foundUser.settings?.isProfilePrivate || false;
 
     // Compute relationship states
     const isFollowing = foundUser.followers.some((followerId) =>
@@ -52,32 +61,77 @@ export const getUserProfileById = async (
       requestId.equals(user)
     );
 
-    // If the user is blocked, restrict access
-    if (isBlocked) {
+    // Case 1: If both users have blocked each other
+    if (isBlockedByVisitedUser && isVisitedUserBlocked) {
       return {
         _id: foundUser._id,
         fullName: foundUser.fullName,
         username: foundUser.username,
-        bio: foundUser.bio,
-        profilePicture: foundUser.profilePicture,
+        bio: "This user is not accessible.",
+        profilePicture: null,
         followersCount: null,
         followingCount: null,
         collagesCount: null,
-        isFollowing,
-        isFollowedBy,
-        isFollowRequested,
-        isProfilePrivate,
-        isBlocked: true,
+        isFollowing: false,
+        isFollowedBy: false,
+        isFollowRequested: false,
+        isProfilePrivate: true,
+        isBlockedByVisitedUser: true,
+        isVisitedUserBlocked: true,
       };
     }
 
-    // If the profile is private and the user is not allowed to view it
-    if (isProfilePrivate && !isFollowing && foundUser._id.toString() !== user) {
+    // Case 2: If the current user is blocked by the visited user
+    if (isBlockedByVisitedUser) {
       return {
         _id: foundUser._id,
         fullName: foundUser.fullName,
         username: foundUser.username,
-        bio: foundUser.bio,
+        bio: "This user is not accessible.",
+        profilePicture: null,
+        followersCount: null,
+        followingCount: null,
+        collagesCount: null,
+        isFollowing: false,
+        isFollowedBy: false,
+        isFollowRequested: false,
+        isProfilePrivate: true,
+        isBlockedByVisitedUser: true,
+        isVisitedUserBlocked: false,
+      };
+    }
+
+    // Case 3: If the current user has blocked the visited user
+    if (isVisitedUserBlocked) {
+      return {
+        _id: foundUser._id,
+        fullName: foundUser.fullName,
+        username: foundUser.username,
+        bio: "This user is not accessible.",
+        profilePicture: null,
+        followersCount: null,
+        followingCount: null,
+        collagesCount: null,
+        isFollowing: false,
+        isFollowedBy: false,
+        isFollowRequested: false,
+        isProfilePrivate: true,
+        isBlockedByVisitedUser: false,
+        isVisitedUserBlocked: true,
+      };
+    }
+
+    // Case 4: If the profile is private and the user does not follow
+    if (
+      isProfilePrivate &&
+      !isFollowing &&
+      foundUser._id.toString() !== user.toString()
+    ) {
+      return {
+        _id: foundUser._id,
+        fullName: foundUser.fullName,
+        username: foundUser.username,
+        bio: "This profile is private.",
         profilePicture: foundUser.profilePicture,
         followersCount: foundUser.followers.length,
         followingCount: foundUser.following.length,
@@ -86,24 +140,22 @@ export const getUserProfileById = async (
         isFollowedBy,
         isFollowRequested,
         isProfilePrivate: true,
-        isBlocked: false,
+        isBlockedByVisitedUser: false,
+        isVisitedUserBlocked: false,
       };
     }
 
-    // Determine pagination for collages
+    // Case 5: Return the full profile if no restrictions apply
     const collages = foundUser.collages || [];
     const collagesHasNextPage = collages.length > limit;
     if (collagesHasNextPage) collages.pop(); // Remove extra item for pagination
 
-    // Determine pagination for reposted collages
     const repostedCollages = foundUser.repostedCollages || [];
     const repostsHasNextPage = repostedCollages.length > limit;
     if (repostsHasNextPage) repostedCollages.pop();
 
-    // Count followers, following, and active moments
     const followersCount = foundUser.followers.length;
     const followingCount = foundUser.following.length;
-    const collagesCount = collages.length;
 
     const hasActiveMoments = await Moment.exists({
       author: userId,
@@ -132,13 +184,14 @@ export const getUserProfileById = async (
       },
       followersCount,
       followingCount,
-      collagesCount,
+      collagesCount: collages.length,
       isFollowing,
       isFollowedBy,
       isFollowRequested,
       hasActiveMoments: Boolean(hasActiveMoments),
       isProfilePrivate,
-      isBlocked: false,
+      isBlockedByVisitedUser: false,
+      isVisitedUserBlocked: false,
     };
   } catch (error) {
     console.error("Error fetching user profile:", error.message);

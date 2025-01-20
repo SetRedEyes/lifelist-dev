@@ -491,8 +491,8 @@ export const AdminProfileProvider = ({ children }) => {
 
   const addCollage = async (collage) => {
     try {
-      // Add the new collage to the state
-      const updatedCollages = [...collages, collage];
+      // Add the new collage to the beginning of the state
+      const updatedCollages = [collage, ...collages];
       setCollages(updatedCollages);
 
       // Increment the collages count in the state

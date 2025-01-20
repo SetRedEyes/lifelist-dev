@@ -22,6 +22,7 @@ import { CreateCollageProvider } from "../contexts/CreateCollageContext";
 
 // Loading Screen
 import Loading from "../screens/loading/Loading";
+import { CollageListsProvider } from "../contexts/CollageListsContext";
 
 const Stack = createStackNavigator();
 
@@ -154,17 +155,19 @@ export default function AppNavigator() {
                   <CameraAlbumProvider>
                     <AddExperiencesProvider>
                       <CreateCollageProvider>
-                        <Stack.Navigator
-                          screenOptions={{
-                            headerShown: false,
-                            cardStyle: { backgroundColor: "#121212" },
-                          }}
-                        >
-                          <Stack.Screen
-                            name="MainApp"
-                            component={TabNavigator}
-                          />
-                        </Stack.Navigator>
+                        <CollageListsProvider>
+                          <Stack.Navigator
+                            screenOptions={{
+                              headerShown: false,
+                              cardStyle: { backgroundColor: "#121212" },
+                            }}
+                          >
+                            <Stack.Screen
+                              name="MainApp"
+                              component={TabNavigator}
+                            />
+                          </Stack.Navigator>
+                        </CollageListsProvider>
                       </CreateCollageProvider>
                     </AddExperiencesProvider>
                   </CameraAlbumProvider>

@@ -20,6 +20,7 @@ import EditTaggedUsers from "../../screens/collage/editcollage/EditTaggedUsers";
 import EditPreview from "../../screens/collage/editcollage/EditPreview";
 import { headerStyles } from "../../styles/components";
 import OnboardingStack from "./OnboardingStack";
+import ProfileStack from "./ProfileStack";
 
 const Stack = createStackNavigator();
 
@@ -252,6 +253,11 @@ export default function MainFeedStack() {
         options={{
           headerShown: false, // Disable the default header from Stack.Navigator
         }}
+      />
+      <Stack.Screen
+        name="ProfileStack"
+        component={ProfileStack}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

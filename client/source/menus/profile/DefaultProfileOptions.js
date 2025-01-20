@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { Text, View, Pressable, Alert } from "react-native";
 import BottomPopup from "../BottomPopup";
 import Icon from "../../icons/Icon";
@@ -7,14 +8,19 @@ import { symbolStyles } from "../../styles/components/symbolStyles";
 import { useMutation } from "@apollo/client";
 import * as Sharing from "expo-sharing";
 import * as Clipboard from "expo-clipboard";
-import { BLOCK_USER } from "../../utils/mutations/userRelationMutations";
+import {
+  BLOCK_USER,
+  UNBLOCK_USER,
+} from "../../utils/mutations/userRelationMutations";
 import DangerAlert from "../../alerts/DangerAlert";
-import { useState } from "react";
 
 export default function DefaultProfileOptions({
   visible,
   onRequestClose,
   profileId,
+  isBlockedByCurrentUser,
+  unblockUser,
+  refetchUserProfile, // Add refetch function as a prop
 }) {
   const navigation = useNavigation();
   const [alertVisible, setAlertVisible] = useState(false);
@@ -23,11 +29,25 @@ export default function DefaultProfileOptions({
   const [blockUser] = useMutation(BLOCK_USER, {
     onCompleted: () => {
       alert("User blocked successfully!");
-      setAlertVisible(false); // Close the alert
-      onRequestClose(); // Close the popup
+      setAlertVisible(false);
+      onRequestClose();
+      refetchUserProfile(); // Refetch profile data after blocking
     },
     onError: (error) => {
       alert(`Error blocking user: ${error.message}`);
+    },
+  });
+
+  // Mutation for unblocking the user
+  const [unblockUserMutation] = useMutation(UNBLOCK_USER, {
+    onCompleted: () => {
+      alert("User unblocked successfully!");
+      unblockUser(); // Trigger callback to update UI
+      onRequestClose();
+      refetchUserProfile(); // Refetch profile data after unblocking
+    },
+    onError: (error) => {
+      alert(`Error unblocking user: ${error.message}`);
     },
   });
 
@@ -59,6 +79,11 @@ export default function DefaultProfileOptions({
   // Handle Block User
   const handleBlockUser = () => {
     blockUser({ variables: { userIdToBlock: profileId } });
+  };
+
+  // Handle Unblock User
+  const handleUnblockUser = () => {
+    unblockUserMutation({ variables: { userIdToUnblock: profileId } });
   };
 
   return (
@@ -96,21 +121,38 @@ export default function DefaultProfileOptions({
           </View>
         </Pressable>
 
-        {/* Block */}
-        <Pressable
-          style={[menuStyles.cardContainer, menuStyles.flex]}
-          onPress={() => setAlertVisible(true)}
-        >
-          <Text
-            style={[
-              menuStyles.spacer,
-              menuStyles.popupText,
-              { color: "red", fontWeight: "500" },
-            ]}
+        {/* Block or Unblock */}
+        {isBlockedByCurrentUser ? (
+          <Pressable
+            style={[menuStyles.cardContainer, menuStyles.flex]}
+            onPress={handleUnblockUser}
           >
-            Block
-          </Text>
-        </Pressable>
+            <Text
+              style={[
+                menuStyles.spacer,
+                menuStyles.popupText,
+                { color: "red", fontWeight: "500" },
+              ]}
+            >
+              Unblock
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            style={[menuStyles.cardContainer, menuStyles.flex]}
+            onPress={() => setAlertVisible(true)}
+          >
+            <Text
+              style={[
+                menuStyles.spacer,
+                menuStyles.popupText,
+                { color: "red", fontWeight: "500" },
+              ]}
+            >
+              Block
+            </Text>
+          </Pressable>
+        )}
 
         {/* Report */}
         <Pressable

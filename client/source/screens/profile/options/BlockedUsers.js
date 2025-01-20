@@ -66,7 +66,11 @@ export default function BlockedUsers() {
 
   // Show loading spinner
   if (isLoading || loading) {
-    return <ActivityIndicator size="large" color="#6AB952" />;
+    return (
+      <View style={layoutStyles.wrapper}>
+        <ActivityIndicator size="large" color="#6AB952" />
+      </View>
+    );
   }
 
   // Handle errors

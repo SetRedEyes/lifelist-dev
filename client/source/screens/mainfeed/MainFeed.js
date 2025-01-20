@@ -52,8 +52,12 @@ export default function MainFeed() {
         .routes.find((route) => route.name === "MainFeed")?.params;
 
       if (params?.refresh) {
+        // Scroll to top before refreshing
+        if (flatListRef.current) {
+          flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+        }
         refetch();
-        // Clear the refresh parameter to avoid repeated refreshes
+        // Clear the refresh parameter
         navigation.setParams({ refresh: false });
       }
     }, [navigation, refetch])

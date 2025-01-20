@@ -6,6 +6,7 @@ import {
   Text,
   Keyboard,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
 import NotificationCard from "../../../cards/user/NotificationCard";
@@ -14,6 +15,7 @@ import SearchBar from "../../../headers/SearchBar";
 import { useAdminProfile } from "../../../contexts/AdminProfileContext";
 import { GET_USER_NOTIFICATIONS } from "../../../utils/queries/userQueries";
 import { DELETE_NOTIFICATION } from "../../../utils/mutations/notificationMutations";
+import { layoutStyles } from "../../../styles/components";
 
 export default function Notifications({ navigation }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,7 +77,9 @@ export default function Notifications({ navigation }) {
   };
 
   if (loading) {
-    return <Text>Loading...</Text>;
+    <View style={layoutStyles.wrapper}>
+      <ActivityIndicator size="large" color="#6AB952" />
+    </View>;
   }
 
   if (error) {

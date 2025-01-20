@@ -23,6 +23,8 @@ export default function CollagePreview() {
   const { images, caption, taggedUsers, coverImage } = collage;
   const headerHeight = useHeaderHeight();
 
+  console.log(coverImage);
+
   // Calculate dynamic collage height
   const collageHeight = screenHeight - headerHeight - 83;
 
