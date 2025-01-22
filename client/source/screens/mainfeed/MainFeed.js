@@ -23,6 +23,7 @@ import { symbolStyles } from "../../styles/components/symbolStyles";
 import { Image } from "expo-image";
 import { headerStyles } from "../../styles/components/headerStyles";
 import { layoutStyles } from "../../styles/components";
+import CollageDisplaySkeleton from "../../displays/CollageDisplaySkeleton";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -152,22 +153,6 @@ export default function MainFeed() {
     setRefreshing(false);
   }, [refetch]);
 
-  // Render collage item
-  const renderCollage = useCallback(
-    ({ item, index }) => (
-      <View style={{ height: collageHeight }}>
-        <CollageMainFeedDisplay
-          collage={item}
-          hasParticipants={item.hasParticipants}
-          isAuthor={currentUser === item.author._id}
-          collages={collages}
-          currentIndex={index}
-        />
-      </View>
-    ),
-    [collageHeight, currentUser._id, collages]
-  );
-
   if (loading && !data) {
     return <View style={layoutStyles.wrapper} />;
   }
@@ -176,8 +161,22 @@ export default function MainFeed() {
     <View style={layoutStyles.wrapper}>
       <FlatList
         ref={flatListRef} // Attach the ref here
-        data={collages}
-        renderItem={renderCollage}
+        data={loading ? Array(5).fill(null) : collages}
+        renderItem={({ item, index }) =>
+          loading ? (
+            <CollageDisplaySkeleton />
+          ) : (
+            <View style={{ height: collageHeight }}>
+              <CollageMainFeedDisplay
+                collage={item}
+                hasParticipants={item.hasParticipants}
+                isAuthor={currentUser === item.author._id}
+                collages={collages}
+                currentIndex={index}
+              />
+            </View>
+          )
+        }
         keyExtractor={(item) => item._id}
         pagingEnabled
         showsVerticalScrollIndicator={false}
@@ -211,3 +210,19 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
 });
+
+/*   // Render collage item
+  const renderCollage = useCallback(
+    ({ item, index }) => (
+      <View style={{ height: collageHeight }}>
+        <CollageMainFeedDisplay
+          collage={item}
+          hasParticipants={item.hasParticipants}
+          isAuthor={currentUser === item.author._id}
+          collages={collages}
+          currentIndex={index}
+        />
+      </View>
+    ),
+    [collageHeight, currentUser._id, collages]
+  ); */

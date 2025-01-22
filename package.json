@@ -15,11 +15,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-amplify": "^6.12.1",
     "concurrently": "^8.2.2",
     "dotenv": "^16.4.4",
     "mongodb": "^6.3.0"
   },
   "devDependencies": {
+    "constructs": "^10.4.2",
+    "esbuild": "^0.24.2",
     "eslint": "^9.15.0",
     "eslint-plugin-react": "^7.37.2",
     "globals": "^15.12.0"

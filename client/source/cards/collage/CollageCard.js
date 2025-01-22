@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Pressable, Dimensions, StyleSheet, View } from "react-native";
+import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 import { Image } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -7,11 +8,10 @@ import {
   saveImageToFileSystem,
 } from "../../utils/caching/cacheHelpers";
 
-// Calculate the image dimensions to maintain a 2:3 aspect ratio
 const { width: screenWidth } = Dimensions.get("window");
 const spacing = 2;
-const imageWidth = (screenWidth - spacing * 4) / 3; // Calculate the width for three columns
-const imageHeight = (imageWidth * 3) / 2; // Maintain 2:3 aspect ratio
+const imageWidth = (screenWidth - spacing * 4) / 3;
+const imageHeight = (imageWidth * 3) / 2;
 
 export default function CollageCard({
   collageId,
@@ -63,11 +63,17 @@ export default function CollageCard({
 
   return (
     <Pressable onPress={handlePress} style={styles.container}>
-      <Image
-        source={{ uri: imageUri }}
-        style={styles.image}
-        contentFit="cover"
-      />
+      {loading ? (
+        <SkeletonPlaceholder>
+          <View style={[styles.image, styles.skeleton]} />
+        </SkeletonPlaceholder>
+      ) : (
+        <Image
+          source={{ uri: imageUri }}
+          style={styles.image}
+          contentFit="cover"
+        />
+      )}
     </Pressable>
   );
 }

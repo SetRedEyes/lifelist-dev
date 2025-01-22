@@ -25,17 +25,17 @@ export default function DefaultCollageOptions({
 
   const shareOptions = [
     { name: "Copy Link", icon: "link.circle", onPress: () => {} },
-    { name: "Message", icon: "message.circle", onPress: () => {} },
+    /*     { name: "Message", icon: "message.circle", onPress: () => {} },
     { name: "Instagram", icon: "logo.instagram", onPress: () => {} },
     { name: "Facebook", icon: "logo.facebook", onPress: () => {} },
-    { name: "Snapchat", icon: "logo.snapchat", onPress: () => {} },
+    { name: "Snapchat", icon: "logo.snapchat", onPress: () => {} }, */
   ];
 
   return (
     <BottomPopup
       visible={visible}
       onRequestClose={onRequestClose}
-      initialHeight={474}
+      initialHeight={274}
     >
       <View style={menuStyles.popupContainer}>
         <Text style={menuStyles.header}>Options</Text>

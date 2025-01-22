@@ -19,7 +19,7 @@ export default function AlbumCard({ album, navigation }) {
       <Text style={cardStyles.primaryText}>{truncatedTitle}</Text>
 
       {/* Album Shots Count */}
-      <Text style={cardStyles.secondaryText}>{album.shotsCount} shots</Text>
+      <Text style={cardStyles.secondaryText}>{album.shots.length} shots</Text>
     </Pressable>
   );
 }

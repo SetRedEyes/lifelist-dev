@@ -8,17 +8,6 @@ const graphqlUri =
   "https://ggu5enboke.execute-api.us-east-2.amazonaws.com/graphql";
 
 // Add Authorization header with token if available
-/* const authLink = setContext((_, { headers }) => {
-  const token = SecureStore.getItem("authToken");
-
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    },
-  };
-}); */
-
 const authLink = setContext(async (_, { headers }) => {
   const token = await SecureStore.getItemAsync("authToken");
 

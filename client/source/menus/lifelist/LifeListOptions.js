@@ -34,7 +34,7 @@ export default function LifeListOptions({
           }
         >
           <View style={menuStyles.flexRow}>
-            <Icon name="plus.circle" style={symbolStyles.popupIcon} />
+            <Icon name="plus.circle" style={symbolStyles.editButton} />
             <Text style={[menuStyles.spacer, menuStyles.popupText]}>
               Add Experiences
             </Text>
@@ -57,7 +57,7 @@ export default function LifeListOptions({
           }
         >
           <View style={menuStyles.flexRow}>
-            <Icon name="plus.circle" style={symbolStyles.popupIcon} />
+            <Icon name="square.and.pencil" style={symbolStyles.editButton} />
             <Text style={[menuStyles.spacer, menuStyles.popupText]}>
               Edit Experiences
             </Text>

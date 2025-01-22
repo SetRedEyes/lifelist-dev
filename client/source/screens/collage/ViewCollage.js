@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  Dimensions,
-  PanResponder,
-} from "react-native";
+import { View, FlatList, StyleSheet, Dimensions } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -31,25 +25,6 @@ export default function ViewCollage() {
 
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const flatListRef = useRef(null);
-
-  // PanResponder for edge swipe gesture
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: (evt, gestureState) => true,
-      onMoveShouldSetPanResponder: (evt, gestureState) => true,
-      onPanResponderMove: (evt, gestureState) => {
-        // Detect a left-edge swipe
-        if (
-          currentIndex === 0 &&
-          gestureState.dx > 50 &&
-          gestureState.moveX < 50
-        ) {
-          navigation.goBack();
-        }
-      },
-      onPanResponderRelease: () => {}, // Optional: Reset state after release
-    })
-  ).current;
 
   useEffect(() => {
     navigation.setOptions({
@@ -98,7 +73,7 @@ export default function ViewCollage() {
   );
 
   return (
-    <View style={layoutStyles.wrapper} {...panResponder.panHandlers}>
+    <View style={layoutStyles.wrapper}>
       <FlatList
         ref={flatListRef}
         data={collages}

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, FlatList, Alert, ActivityIndicator, Text } from "react-native";
+import { View, FlatList, ActivityIndicator, Text } from "react-native";
 import {
   useNavigation,
   useRoute,
@@ -7,7 +7,6 @@ import {
 } from "@react-navigation/native";
 import { useCameraAlbums } from "../../../contexts/CameraAlbumContext";
 import CameraShotNavigateCard from "../../../cards/camera/CameraShotNavigateCard";
-import DangerAlert from "../../../alerts/DangerAlert";
 import ButtonIcon from "../../../icons/ButtonIcon";
 import {
   layoutStyles,
@@ -15,13 +14,14 @@ import {
   symbolStyles,
   containerStyles,
 } from "../../../styles/components";
+import AlbumOptions from "../../../menus/camera/AlbumOptions";
 
 export default function ViewAlbum() {
   const navigation = useNavigation();
   const route = useRoute();
   const { albumId, fromScreen } = route.params;
 
-  const [alertVisible, setAlertVisible] = useState(false);
+  const [optionsVisible, setOptionsVisible] = useState(false); // For AlbumOptions menu
   const [shots, setShots] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(true);
@@ -62,37 +62,15 @@ export default function ViewAlbum() {
       headerRight: () => (
         <View style={headerStyles.headerRight}>
           <ButtonIcon
-            name="pencil.line"
-            weight="medium"
-            onPress={() =>
-              navigation.navigate("ManageAlbumShots", {
-                albumId,
-                associatedShots: shots,
-              })
-            }
-            style={symbolStyles.pencil}
+            name="ellipsis"
+            weight="bold"
+            onPress={() => setOptionsVisible(true)} // Open AlbumOptions menu
+            style={symbolStyles.ellipsis}
           />
-          <View style={{ marginLeft: 16 }}>
-            <ButtonIcon
-              name="trash"
-              weight="medium"
-              onPress={handleDeleteAlbum}
-              style={symbolStyles.trash}
-              tintColor={"#E53935"}
-            />
-          </View>
         </View>
       ),
     });
-  }, [
-    navigation,
-    handleDeleteAlbum,
-    specificAlbum,
-    albumId,
-    shots,
-    handleBackPress,
-    fromScreen,
-  ]);
+  }, [specificAlbum, navigation, fromScreen]);
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -136,20 +114,11 @@ export default function ViewAlbum() {
     }, [])
   );
 
-  // Handle album deletion
-  const handleDeleteAlbum = () => {
-    setAlertVisible(true);
-  };
-
-  const confirmDeleteAlbum = async () => {
-    setAlertVisible(false);
-    try {
-      await removeAlbumFromCache(albumId);
-      navigation.navigate("CameraRoll");
-    } catch (error) {
-      console.error("[ViewAlbum] Failed to delete album:", error);
-      Alert.alert("Error", "Failed to delete album.");
-    }
+  const handleEditAlbum = () => {
+    navigation.navigate("ManageAlbumShots", {
+      albumId,
+      associatedShots: shots,
+    });
   };
 
   // Render individual shots
@@ -186,14 +155,13 @@ export default function ViewAlbum() {
         />
       )}
 
-      <DangerAlert
-        visible={alertVisible}
-        onRequestClose={() => setAlertVisible(false)}
-        title="Delete Album"
-        message="Are you sure you want to delete this album? This action cannot be undone."
-        onConfirm={confirmDeleteAlbum}
-        onCancel={() => setAlertVisible(false)}
-        cancelButtonText="Discard"
+      {/* Album Options Menu */}
+      <AlbumOptions
+        visible={optionsVisible}
+        onRequestClose={() => setOptionsVisible(false)}
+        onEditAlbum={handleEditAlbum}
+        albumId={albumId}
+        navigation={navigation}
       />
     </View>
   );

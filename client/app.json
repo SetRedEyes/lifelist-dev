@@ -2,7 +2,7 @@
   "expo": {
     "name": "LifeList",
     "slug": "lifelist",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/branding/lifelist-icon.png",
     "userInterfaceStyle": "dark",
@@ -14,7 +14,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.joinlifelist.lifelist",
-      "buildNumber": "1.0.1",
+      "buildNumber": "1.0.4",
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {

@@ -25,6 +25,7 @@ export default function CameraRoll() {
   const { albums, initializeAlbumCache, isAlbumCacheInitialized } =
     useCameraAlbums();
   const { shots, loadNextPage, hasNextPage } = useCameraRoll();
+  console.log(albums);
 
   // Set header options dynamically
   useEffect(() => {

@@ -29,6 +29,8 @@ import {
 } from "../../utils/caching/cacheHelpers";
 import { GET_ALL_USERS } from "../../utils/queries/userQueries";
 import { containerStyles } from "../../styles/components";
+import SkeletonProfileCard from "../../cards/explore/SkeletonProfileCard";
+import SkeletonCollageCard from "../../cards/explore/SkeletonCollageCard";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -322,41 +324,6 @@ export default function Explore({ navigation }) {
     }, 25);
   };
 
-  // PanResponder for swipe-to-go-back
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: (_, gestureState) => {
-      // Detect swipe from the left side
-      return gestureState.dx > 0 && isSearchActive;
-    },
-    onPanResponderMove: (_, gestureState) => {
-      if (gestureState.dx > 0) {
-        // Move only to the right
-        translateX.setValue(gestureState.dx);
-      }
-    },
-    onPanResponderRelease: (_, gestureState) => {
-      if (gestureState.dx > screenWidth / 4) {
-        // Trigger go-back if swipe distance exceeds threshold
-        Animated.timing(translateX, {
-          toValue: screenWidth,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => {
-          setIsSearchActive(false); // Reset search state
-          setSearchQuery(""); // Clear search query
-          setUsers([]); // Reset user list
-          translateX.setValue(0); // Reset position
-        });
-      } else {
-        // Reset position if swipe is insufficient
-        Animated.spring(translateX, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      }
-    },
-  });
-
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
@@ -427,6 +394,7 @@ export default function Explore({ navigation }) {
                 </View>
               }
               style={{ marginHorizontal: 8 }}
+              keyboardShouldPersistTaps="handled"
             />
           ) : (
             <FlatList
@@ -450,6 +418,7 @@ export default function Explore({ navigation }) {
                 )
               }
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             />
           )}
         </Animated.View>
@@ -464,15 +433,21 @@ export default function Explore({ navigation }) {
                   Recommended Profiles
                 </Text>
                 <FlatList
-                  data={profiles}
+                  data={profileLoading ? Array(5).fill(null) : profiles}
                   horizontal
-                  keyExtractor={(item) => item._id.toString()}
-                  renderItem={({ item }) => (
-                    <RecommendedProfileCard
-                      user={item}
-                      onPress={() => handleProfileView(item)}
-                    />
-                  )}
+                  keyExtractor={(item, index) =>
+                    item?._id?.toString() || index.toString()
+                  }
+                  renderItem={({ item }) =>
+                    profileLoading ? (
+                      <SkeletonProfileCard />
+                    ) : (
+                      <RecommendedProfileCard
+                        user={item}
+                        onPress={() => handleProfileView(item)}
+                      />
+                    )
+                  }
                   onEndReached={fetchMoreProfiles}
                   onEndReachedThreshold={0.8}
                   showsHorizontalScrollIndicator={false}
@@ -485,15 +460,21 @@ export default function Explore({ navigation }) {
             }
             ListFooterComponent={
               <FlatList
-                data={collages}
-                keyExtractor={(item) => item._id.toString()}
-                renderItem={({ item, index }) => (
-                  <RecommendedCollageCard
-                    collage={item}
-                    collages={collages}
-                    index={index}
-                  />
-                )}
+                data={collageLoading ? Array(9).fill(null) : collages}
+                keyExtractor={(item, index) =>
+                  item?._id?.toString() || index.toString()
+                }
+                renderItem={({ item, index }) =>
+                  collageLoading ? (
+                    <SkeletonCollageCard />
+                  ) : (
+                    <RecommendedCollageCard
+                      collage={item}
+                      collages={collages}
+                      index={index}
+                    />
+                  )
+                }
                 numColumns={3}
                 columnWrapperStyle={styles.columnWrapper}
                 showsVerticalScrollIndicator={false}

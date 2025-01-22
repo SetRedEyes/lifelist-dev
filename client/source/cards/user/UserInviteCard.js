@@ -1,21 +1,19 @@
 import React from "react";
 import { Text, View, Pressable, Alert } from "react-native";
 import { Image } from "expo-image";
-import * as SMS from "expo-sms"; // Import SMS module
+import * as SMS from "expo-sms";
 import SmallGreyButton from "../../buttons/SmallGreyButton";
 import { cardStyles } from "../../styles/components/cardStyles";
 
 export default function UserInviteCard({ contact }) {
-  // Invite via SMS
   const handleInvitePress = async () => {
     try {
-      const phoneNumber = contact.phoneNumbers[0]?.number;
+      const phoneNumber = contact.phoneNumbers?.[0]?.number;
       if (!phoneNumber) {
         Alert.alert("Error", "No phone number available for this contact.");
         return;
       }
 
-      // Check if SMS is available
       const isAvailable = await SMS.isAvailableAsync();
       if (isAvailable) {
         const { result } = await SMS.sendSMSAsync(
@@ -46,7 +44,7 @@ export default function UserInviteCard({ contact }) {
         <View style={cardStyles.textContainer}>
           <Text style={cardStyles.primaryText}>{contact.name}</Text>
           <Text style={cardStyles.secondaryText}>
-            {contact.phoneNumbers[0]?.number}
+            {contact.phoneNumbers?.[0]?.number || "No phone number"}
           </Text>
         </View>
         <View style={cardStyles.actionButtonSpacer}>

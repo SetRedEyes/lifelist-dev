@@ -124,7 +124,7 @@ export default function AuthorCollageOptions({
       icon: "link.circle",
       onPress: () => Clipboard.setStringAsync(collage.coverImage),
     },
-    {
+    /*     {
       name: "Message",
       icon: "message.circle",
       onPress: () => handleShareCollage(collage.coverImage),
@@ -142,19 +142,19 @@ export default function AuthorCollageOptions({
         Linking.openURL(
           `https://www.facebook.com/sharer/sharer.php?u=${collage.coverImage}`
         ),
-    },
+    }, */
   ];
 
   return (
     <BottomPopup
       visible={visible}
       onRequestClose={onRequestClose}
-      initialHeight={484}
+      initialHeight={274}
     >
       <View style={menuStyles.popupContainer}>
         <Text style={menuStyles.header}>Options</Text>
         {/* Edit */}
-        <Pressable
+        {/*         <Pressable
           style={[menuStyles.cardContainer, menuStyles.flex]}
           onPress={() => {
             onRequestClose();
@@ -181,7 +181,7 @@ export default function AuthorCollageOptions({
             weight="semibold"
             tintColor="#6AB952"
           />
-        </Pressable>
+        </Pressable> */}
 
         {/* Archive/Unarchive */}
         <Pressable
