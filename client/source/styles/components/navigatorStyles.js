@@ -22,17 +22,18 @@ export const navigatorStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "transparent",
   },
+  // NEW STYLE
   activeNavigatorButton: {
-    backgroundColor: "#6AB95230",
+    backgroundColor: "#89C2FA30",
     borderWidth: 1,
-    borderColor: "#6AB95250",
+    borderColor: "#89C2FA50",
   },
   navigatorText: {
     color: "#696969",
     fontWeight: "500",
   },
   activeNavigatorText: {
-    color: "#6AB952",
+    color: "#89C2FA",
     fontWeight: "500",
   },
 

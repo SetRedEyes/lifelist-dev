@@ -1,4 +1,44 @@
-import { Shaders, GLSL } from "gl-react";
+export const vertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position, 1.0);
+  }
+`;
+
+export const fragmentShader = `
+  uniform sampler2D uTexture;
+  uniform float uTime;
+  varying vec2 vUv;
+
+  float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+  }
+
+  float vignette(vec2 uv) {
+    float d = distance(uv, vec2(0.5));
+    return smoothstep(0.8, 0.5, d);
+  }
+
+  void main() {
+    vec4 color = texture2D(uTexture, vUv);
+
+    // Disposable camera effects
+    color.r *= 1.2;
+    color.g *= 1.1;
+    color.b *= 0.9;
+
+    // Grain effect
+    color.rgb += random(vUv + uTime * 0.1) * 0.05;
+
+    // Vignette
+    color.rgb *= vignette(vUv);
+
+    gl_FragColor = color;
+  }
+`;
+
+/* import { Shaders, GLSL } from "gl-react";
 
 export const shaders = Shaders.create({
   LUT: {
@@ -34,3 +74,4 @@ export const shaders = Shaders.create({
     `,
   },
 });
+ */

@@ -3,6 +3,9 @@ import { Text, View, FlatList } from "react-native";
 import { lifelistStyles } from "../../../styles/screens/lifelistStyles";
 import ExperienceCard from "../../../cards/experience/ExperienceCard";
 
+const cardWidth = lifelistStyles.cardWidth;
+const cardHeight = lifelistStyles.cardHeight;
+
 export default function AllExperiences({ lifeList, navigation }) {
   const sortByTitle = (a, b) =>
     a.experience.title.localeCompare(b.experience.title);

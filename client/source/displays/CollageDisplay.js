@@ -78,8 +78,6 @@ export default function CollageDisplay({
         isSavedByCurrentUser,
       } = data.markCollageViewedAndGetCollageById;
 
-      console.log(collage);
-
       setIsLiked(isLikedByCurrentUser);
       setIsReposted(isRepostedByCurrentUser);
       setIsSaved(isSavedByCurrentUser);

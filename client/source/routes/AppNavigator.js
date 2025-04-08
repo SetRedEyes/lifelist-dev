@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../contexts/AuthContext";
 import { useLazyQuery } from "@apollo/client";
 import { CHECK_ONBOARDING_STATUS } from "../utils/queries/onboardingQueries";
+import linking from "./linking";
 
 // Main Navigation Flows
 import TabNavigator from "./TabNavigator";
@@ -23,6 +24,7 @@ import { CreateCollageProvider } from "../contexts/CreateCollageContext";
 // Loading Screen
 import Loading from "../screens/loading/Loading";
 import { CollageListsProvider } from "../contexts/CollageListsContext";
+import { FeedRefreshProvider } from "../contexts/FeedRefreshContext";
 
 const Stack = createStackNavigator();
 
@@ -77,33 +79,6 @@ export default function AppNavigator() {
     checkInitialStatus();
   }, [isAuthenticated]);
 
-  /*   // Automatically check onboarding status when currentUser changes
-  useEffect(() => {
-    const checkOnboardingStatus = async () => {
-      if (currentUser) {
-        try {
-          const onboardingStatus = await AsyncStorage.getItem(
-            `isOnboardingComplete_${currentUser}`
-          );
-
-          if (!onboardingStatus) {
-            setIsOnboardingComplete(onboardingStatus === "false");
-          } else {
-            setIsOnboardingComplete(onboardingStatus === "true");
-          }
-        } catch (error) {
-          console.error("Error checking onboarding status:", error);
-        } finally {
-          setIsLoadingOnboardingStatus(false);
-        }
-      } else {
-        setIsLoadingOnboardingStatus(false);
-      }
-    };
-
-    checkOnboardingStatus();
-  }, [currentUser]); */
-
   useEffect(() => {
     const checkOnboardingStatusAsync = async () => {
       if (currentUser) {
@@ -137,7 +112,7 @@ export default function AppNavigator() {
   if (isChecking || isLoadingOnboardingStatus) return <Loading />;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       {isEarlyAccessUnlocked === false ? (
         <AuthenticationStack initialRouteName="EarlyAccess" />
       ) : !isAuthenticated ? (
@@ -156,17 +131,19 @@ export default function AppNavigator() {
                     <AddExperiencesProvider>
                       <CreateCollageProvider>
                         <CollageListsProvider>
-                          <Stack.Navigator
-                            screenOptions={{
-                              headerShown: false,
-                              cardStyle: { backgroundColor: "#121212" },
-                            }}
-                          >
-                            <Stack.Screen
-                              name="MainApp"
-                              component={TabNavigator}
-                            />
-                          </Stack.Navigator>
+                          <FeedRefreshProvider>
+                            <Stack.Navigator
+                              screenOptions={{
+                                headerShown: false,
+                                cardStyle: { backgroundColor: "#121212" },
+                              }}
+                            >
+                              <Stack.Screen
+                                name="MainApp"
+                                component={TabNavigator}
+                              />
+                            </Stack.Navigator>
+                          </FeedRefreshProvider>
                         </CollageListsProvider>
                       </CreateCollageProvider>
                     </AddExperiencesProvider>

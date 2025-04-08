@@ -68,7 +68,7 @@ export default function LifeList() {
     navigation.setOptions({
       headerLeft: () => (
         <View style={headerStyles.headerLeft}>
-          <Text style={styles.headerLeftText}>My LifeList</Text>
+          <Text style={styles.headerLeftText}>My Bucket List</Text>
         </View>
       ),
       headerRight: () => (

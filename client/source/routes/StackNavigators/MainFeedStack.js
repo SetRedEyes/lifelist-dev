@@ -21,6 +21,7 @@ import EditPreview from "../../screens/collage/editcollage/EditPreview";
 import { headerStyles } from "../../styles/components";
 import OnboardingStack from "./OnboardingStack";
 import ProfileStack from "./ProfileStack";
+import EarlyAccess from "../../screens/authentication/EarlyAccess";
 
 const Stack = createStackNavigator();
 
@@ -257,6 +258,11 @@ export default function MainFeedStack() {
       <Stack.Screen
         name="ProfileStack"
         component={ProfileStack}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EarlyAccessScreen"
+        component={EarlyAccess}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

@@ -9,6 +9,17 @@ const getCollageId = (collage) => collage.id || collage._id;
 export default function Collages({ data: collages, fetchMore }) {
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // Deduplicate collages by ID
+  const deduplicateCollages = (collages) => {
+    const seenIds = new Set();
+    return collages.filter((collage) => {
+      const id = getCollageId(collage);
+      if (seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    });
+  };
+
   const handleLoadMore = async () => {
     if (loadingMore) return;
     setLoadingMore(true);
@@ -30,16 +41,18 @@ export default function Collages({ data: collages, fetchMore }) {
     />
   );
 
+  const deduplicatedCollages = deduplicateCollages(collages);
+
   return (
     <View style={{ flex: 1 }}>
       <FlatList
-        data={collages}
+        data={deduplicatedCollages}
         renderItem={renderCollageItem}
         keyExtractor={(item) => getCollageId(item)}
         numColumns={3}
         columnWrapperStyle={styles.columnWrapper}
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5} // Fetch more data when the user is halfway through the remaining list
+        onEndReachedThreshold={0.5}
         ListEmptyComponent={
           <View style={containerStyles.emptyContainer}>
             <Text style={containerStyles.emptyText}>
@@ -55,6 +68,6 @@ export default function Collages({ data: collages, fetchMore }) {
 const styles = StyleSheet.create({
   columnWrapper: {
     justifyContent: "flex-start",
-    marginHorizontal: 4, // Add spacing between columns
+    marginHorizontal: 4,
   },
 });

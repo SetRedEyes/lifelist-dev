@@ -105,6 +105,7 @@ export const GET_COLLAGES_REPOSTS_MOMENTS = gql`
         items {
           _id
           coverImage
+          createdAt
         }
         nextCursor
         hasNextPage

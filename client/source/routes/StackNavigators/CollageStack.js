@@ -2,6 +2,7 @@ import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import ViewCollage from "../../screens/collage/ViewCollage";
 import Report from "../../screens/report/Report";
+import SingleCollage from "../../screens/collage/SingleCollage";
 
 const Stack = createStackNavigator();
 
@@ -12,6 +13,11 @@ export default function CollageStack() {
       <Stack.Screen
         name="ViewCollage"
         component={ViewCollage}
+        options={{ headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="SingleCollage"
+        component={SingleCollage}
         options={{ headerShown: true, title: "" }}
       />
       {/* Report Screen */}

@@ -119,7 +119,11 @@ export const ARCHIVE_COLLAGE = gql`
     archiveCollage(collageId: $collageId) {
       success
       message
-      collageId
+      collage {
+        _id
+        coverImage
+        createdAt
+      }
     }
   }
 `;

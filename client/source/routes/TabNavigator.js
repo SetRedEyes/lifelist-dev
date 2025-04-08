@@ -26,9 +26,7 @@ export default function TabNavigator() {
         name="MainFeedStack"
         component={MainFeedStack}
         options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon focused={focused} color={color} routeName="Home" />
-          ),
+          tabBarIcon: ({ focused, color }) => <TabIcon routeName="Home" />,
           tabBarLabel: () => null,
         }}
       />
@@ -106,6 +104,7 @@ function getTabBarVisibility(route, tabName) {
     "BucketListOnboarding",
     "DevelopingDisplay",
     "Moments",
+    "EarlyAccessScreen",
   ];
 
   // Hide TabBar if the focused route is in the hidden list

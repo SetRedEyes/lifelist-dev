@@ -9,7 +9,9 @@ export const CREATE_CAMERA_SHOT = gql`
       message
       cameraShot {
         _id
+        image
         imageThumbnail
+        capturedAt
         developingTime
         isDeveloped
         readyToReviewAt

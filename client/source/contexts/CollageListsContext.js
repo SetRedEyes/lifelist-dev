@@ -65,6 +65,8 @@ export const CollageListsProvider = ({ children }) => {
         likedCollages,
         addCollageToContext,
         removeCollageFromContext,
+        setArchivedCollages, // Expose the setter
+        setSavedCollages,
       }}
     >
       {children}

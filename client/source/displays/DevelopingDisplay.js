@@ -11,8 +11,6 @@ import * as Sharing from "expo-sharing";
 import DangerAlert from "../alerts/DangerAlert";
 import CameraShotDisplay from "../displays/CameraShotDisplay";
 import ButtonIconWithLabel from "../icons/ButtonIconWithLabel";
-import { useDevelopingRoll } from "../contexts/DevelopingRollContext";
-import { useAdminProfile } from "../contexts/AdminProfileContext";
 import { TRANSFER_CAMERA_SHOT } from "../utils/mutations/cameraMutations";
 import { useMutation } from "@apollo/client";
 import { cameraStyles } from "../styles/screens/cameraStyles";
@@ -25,6 +23,8 @@ import {
 import { useCameraRoll } from "../contexts/CameraRollContext";
 import ButtonIcon from "../icons/ButtonIcon";
 import * as FileSystem from "expo-file-system";
+import { useDevelopingRoll } from "../contexts/DevelopingRollContext";
+import { useAdminProfile } from "../contexts/AdminProfileContext";
 
 const threshold = 75; // Drag distance threshold
 
@@ -32,9 +32,12 @@ export default function DevelopingDisplay() {
   const navigation = useNavigation();
   const route = useRoute();
   const { shot } = route.params;
+  console.log("SHOT");
+  console.log(shot);
+  console.log(shot._id);
 
-  const { developingShots, removeShot } = useDevelopingRoll();
   const { addMoment } = useAdminProfile();
+  const { developingShots, removeShot } = useDevelopingRoll();
   const { addShotToRoll, removeShotFromRoll, shots } = useCameraRoll();
 
   // Apollo Mutation for transferring the shot
@@ -217,6 +220,7 @@ export default function DevelopingDisplay() {
     try {
       if (!shot._id) return;
 
+      console.log("Calling addMoment with:", { cameraShotId: shot._id });
       // Use AdminProfileContext's addMoment
       await addMoment({ cameraShotId: shot._id });
 

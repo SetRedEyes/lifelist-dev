@@ -1,33 +1,30 @@
 {
   "expo": {
-    "name": "LifeList",
+    "name": "Echo",
     "slug": "lifelist",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
-    "icon": "./assets/branding/lifelist-icon.png",
+    "icon": "./assets/branding/echo-app-icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/branding/lifelist-icon.png",
+      "image": "./assets/branding/echo-app-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.joinlifelist.lifelist",
-      "buildNumber": "1.0.4",
+      "buildNumber": "1.0.5",
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
+      "associatedDomains": ["applinks:joinlifelist.com"],
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images.",
         "NSCameraUsageDescription": "This app needs access to your camera to take photos.",
         "NSPhotoLibraryAddUsageDescription": "This app needs access to your photo library to save photos.",
         "NSContactsUsageDescription": "This app needs access to your contacts to help you connect with friends."
-      },
-      "config": {
-        "usesPushNotifications": true
       }
     },
-    "permissions": ["CAMERA"],
     "plugins": [
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
@@ -59,9 +56,6 @@
         "projectId": "4fa51d41-7f46-4644-8ed9-4ff160efb297"
       }
     },
-    "owner": "wyattbensman",
-    "experimental": {
-      "enableBridgelessMode": false
-    }
+    "owner": "wyattbensman"
   }
 }

@@ -59,7 +59,7 @@ export default function CameraFooter({
             }}
           >
             <LinearGradient
-              colors={["#6AB952", "#5FC4ED"]}
+              colors={["#2C3E50", "#89C2FA"]}
               style={styles.circleOutline}
             >
               <View style={styles.circle} />

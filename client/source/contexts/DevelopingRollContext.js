@@ -146,6 +146,8 @@ export const DevelopingRollProvider = ({ children }) => {
   // Add a new shot to the developing roll
   const addShot = async (newShot) => {
     try {
+      console.log("NEWSHOT:", newShot);
+
       const updatedShots = [newShot, ...developingShots];
       setDevelopingShots(updatedShots);
 
@@ -162,7 +164,6 @@ export const DevelopingRollProvider = ({ children }) => {
   };
 
   // Remove a shot from the developing roll
-  // Remove a shot from the developing roll
   const removeShot = async (shotId, isRetake = false) => {
     try {
       // Check if the shot exists locally before attempting removal
@@ -174,15 +175,19 @@ export const DevelopingRollProvider = ({ children }) => {
         return;
       }
 
-      // Attempt to delete the shot from S3 using the mutation
-      const { data } = await deleteCameraShot({
-        variables: { shotId },
-      });
+      // Only delete from S3 if it's a retake
+      if (isRetake) {
+        const { data } = await deleteCameraShot({ variables: { shotId } });
 
-      if (!data?.deleteCameraShot?.success) {
-        console.warn(
-          `[DevelopingRollContext] Failed to delete shot ${shotId} remotely: ${data?.deleteCameraShot?.message}`
-        );
+        if (!data?.deleteCameraShot?.success) {
+          console.warn(
+            `[DevelopingRollContext] Failed to delete shot ${shotId} remotely: ${data?.deleteCameraShot?.message}`
+          );
+        } else {
+          console.log(
+            `[DevelopingRollContext] Shot ${shotId} deleted from S3.`
+          );
+        }
       }
 
       // Remove the shot locally

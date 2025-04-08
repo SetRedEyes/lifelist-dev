@@ -18,6 +18,7 @@ const createCameraShot = async (_, { image, thumbnail }, { user }) => {
       author: user,
       image, // Full-size image URL passed from the client
       imageThumbnail: thumbnail, // Thumbnail URL passed from the client
+      capturedAt: new Date(),
       developingTime,
       readyToReviewAt,
       isDeveloped: false, // Initial state
@@ -38,7 +39,9 @@ const createCameraShot = async (_, { image, thumbnail }, { user }) => {
       message: "Added to developing shots.",
       cameraShot: {
         _id: newShot._id,
+        image: newShot.image,
         imageThumbnail: newShot.imageThumbnail,
+        createdAt: newShot.createdAt,
         developingTime: newShot.developingTime,
         isDeveloped: newShot.isDeveloped,
         readyToReviewAt: newShot.readyToReviewAt,

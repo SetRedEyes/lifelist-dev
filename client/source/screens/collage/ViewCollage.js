@@ -15,7 +15,7 @@ import {
 export default function ViewCollage() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { collages, initialIndex } = route.params;
+  const { collageId, collages, initialIndex } = route.params;
 
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();

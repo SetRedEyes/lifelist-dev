@@ -111,6 +111,7 @@ export default function Followers({ userId, searchQuery }) {
         style={{ flex: 1, marginHorizontal: 8 }}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
+        keyboardShouldPersistTaps="handled"
       />
 
       <DangerAlert

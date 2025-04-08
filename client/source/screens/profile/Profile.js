@@ -147,51 +147,59 @@ export default function Profile() {
     setOptionsPopupVisible(false);
   };
 
-  const renderContent = () => (
-    <>
-      <ProfileOverview
-        profile={profileData}
-        followerData={{
-          followersCount: profileData?.followersCount || 0,
-          followingCount: profileData?.followingCount || 0,
-          collagesCount: collages?.length || profileData?.collagesCount || 0,
-        }}
-        userId={userId}
-        isAdminView={isAdminView}
-      />
-      {profileData?.isBlockedByVisitedUser ? (
-        <View style={containerStyles.privateContainer}>
-          <Text style={containerStyles.privateText}>
-            You cannot view this profile because the user has blocked you.
-          </Text>
-        </View>
-      ) : isVisitedUserBlocked ? (
-        <View style={containerStyles.privateContainer}>
-          <Text style={[containerStyles.privateText, { marginHorizontal: 64 }]}>
-            You have blocked this user. Unblock them to view their profile.
-          </Text>
-        </View>
-      ) : profileData?.isProfilePrivate &&
-        !profileData?.isFollowing &&
-        !isAdminView ? (
-        <View style={containerStyles.privateContainer}>
-          <LockIcon borderColor="#696969" color="#696969" />
-          <Text style={containerStyles.privateText}>
-            This user’s profile is private.
-          </Text>
-        </View>
-      ) : (
-        <ProfileNavigator
+  const renderContent = () => {
+    if (!profileData) {
+      return <View style={layoutStyles.wrapper}></View>;
+    }
+
+    return (
+      <>
+        <ProfileOverview
+          profile={profileData}
+          followerData={{
+            followersCount: profileData?.followersCount || 0,
+            followingCount: profileData?.followingCount || 0,
+            collagesCount: collages?.length || profileData?.collagesCount || 0,
+          }}
           userId={userId}
-          isAdmin={isAdminView}
-          collages={collages}
-          reposts={reposts}
-          fetchMoreCollages={handleFetchMoreCollages}
-          fetchMoreReposts={handleFetchMoreReposts}
+          isAdminView={isAdminView}
         />
-      )}
-    </>
-  );
+        {profileData?.isBlockedByVisitedUser ? (
+          <View style={containerStyles.privateContainer}>
+            <Text style={containerStyles.privateText}>
+              You cannot view this profile because the user has blocked you.
+            </Text>
+          </View>
+        ) : isVisitedUserBlocked ? (
+          <View style={containerStyles.privateContainer}>
+            <Text
+              style={[containerStyles.privateText, { marginHorizontal: 64 }]}
+            >
+              You have blocked this user. Unblock them to view their profile.
+            </Text>
+          </View>
+        ) : profileData?.isProfilePrivate &&
+          !profileData?.isFollowing &&
+          !isAdminView ? (
+          <View style={containerStyles.privateContainer}>
+            <LockIcon borderColor="#696969" color="#696969" />
+            <Text style={containerStyles.privateText}>
+              This user’s profile is private.
+            </Text>
+          </View>
+        ) : (
+          <ProfileNavigator
+            userId={userId}
+            isAdmin={isAdminView}
+            collages={collages}
+            reposts={reposts}
+            fetchMoreCollages={handleFetchMoreCollages}
+            fetchMoreReposts={handleFetchMoreReposts}
+          />
+        )}
+      </>
+    );
+  };
 
   return (
     <View style={layoutStyles.wrapper}>

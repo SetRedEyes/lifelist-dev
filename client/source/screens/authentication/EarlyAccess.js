@@ -120,7 +120,7 @@ export default function EarlyAccess() {
         {!accessGranted ? (
           <>
             <Image
-              source={require("../../../assets/branding/lifelist-icon.png")}
+              source={require("../../../assets/branding/echo-logo-icon.png")}
               style={styles.imageLogo}
             />
             <Text style={styles.header}>Early Access</Text>
@@ -131,9 +131,9 @@ export default function EarlyAccess() {
               autoCapitalize="characters"
             />
             <LockIcon
-              color={inputValue ? "#6AB952" : "#252525"}
-              backgroundColor={inputValue ? "#6AB95230" : "transparent"}
-              borderColor={inputValue ? "#6AB95250" : "transparent"}
+              color={inputValue ? "#89C2FA" : "#252525"}
+              backgroundColor={inputValue ? "#89C2FA30" : "transparent"}
+              borderColor={inputValue ? "#89C2FA50" : "transparent"}
               onPress={handleLockPress}
             />
           </>
@@ -181,8 +181,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   imageLogo: {
-    width: 176,
-    height: 144,
+    width: 175,
+    height: 175,
   },
   imageText: {
     width: 224,

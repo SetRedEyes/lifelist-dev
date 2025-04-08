@@ -23,7 +23,6 @@ import EditTaggedUsers from "../../screens/collage/editcollage/EditTaggedUsers";
 import EditCoverImage from "../../screens/collage/editcollage/EditCoverImage";
 import EditOverview from "../../screens/collage/editcollage/EditOverview";
 import EditMedia from "../../screens/collage/editcollage/EditMedia";
-import ViewCollage from "../../screens/collage/ViewCollage";
 import { headerStyles } from "../../styles/components";
 
 const Stack = createStackNavigator();
@@ -371,11 +370,6 @@ export default function ProfileStack() {
             backgroundColor: "#121212",
           },
         }}
-      />
-      <Stack.Screen
-        name="ViewCollage"
-        component={ViewCollage}
-        options={{ headerShown: true, title: "" }}
       />
     </Stack.Navigator>
   );

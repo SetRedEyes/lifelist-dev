@@ -7,11 +7,7 @@ import {
   Dimensions,
   Pressable,
 } from "react-native";
-import {
-  useFocusEffect,
-  useNavigation,
-  useRoute,
-} from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useQuery } from "@apollo/client";
@@ -24,6 +20,7 @@ import { Image } from "expo-image";
 import { headerStyles } from "../../styles/components/headerStyles";
 import { layoutStyles } from "../../styles/components";
 import CollageDisplaySkeleton from "../../displays/CollageDisplaySkeleton";
+import { useFeedRefresh } from "../../contexts/FeedRefreshContext";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -33,6 +30,8 @@ export default function MainFeed() {
   const tabBarHeight = useBottomTabBarHeight();
   const headerHeight = useHeaderHeight();
   const route = useRoute();
+
+  const { refreshMainFeed, setRefreshMainFeed } = useFeedRefresh();
 
   // Ref for the FlatList
   const flatListRef = useRef(null);
@@ -46,27 +45,10 @@ export default function MainFeed() {
   // State for refreshing
   const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      const params = navigation
-        .getState()
-        .routes.find((route) => route.name === "MainFeed")?.params;
-
-      if (params?.refresh) {
-        // Scroll to top before refreshing
-        if (flatListRef.current) {
-          flatListRef.current.scrollToOffset({ offset: 0, animated: true });
-        }
-        refetch();
-        // Clear the refresh parameter
-        navigation.setParams({ refresh: false });
-      }
-    }, [navigation, refetch])
-  );
-
   // Main feed query
   const { data, loading, error, fetchMore, refetch } = useQuery(GET_MAIN_FEED, {
     variables: { limit: 10 },
+    fetchPolicy: "network-only", // Ensure data is fetched from the server
   });
 
   const collages = data?.getMainFeed?.collages || [];
@@ -81,6 +63,19 @@ export default function MainFeed() {
     refetch();
   }, [refetch]);
 
+  // Handle refreshing when the global `refreshMainFeed` state changes
+  useEffect(() => {
+    if (refreshMainFeed) {
+      console.log("Refreshing MainFeed..."); // Debug: Confirm this is triggered
+      if (flatListRef.current) {
+        flatListRef.current.scrollToOffset({ offset: 0, animated: true }); // Scroll to top
+      }
+      refetch().then(() => {
+        setRefreshMainFeed(false); // Reset the refresh state only after refetching
+      });
+    }
+  }, [refreshMainFeed, refetch, setRefreshMainFeed]);
+
   // Configure the header options
   useEffect(() => {
     navigation.setOptions({
@@ -89,7 +84,7 @@ export default function MainFeed() {
         <View style={headerStyles.headerLeft}>
           <Pressable onPress={handleLogoPress}>
             <Image
-              source={require("../../../assets/branding/lifelist-text.png")}
+              source={require("../../../assets/branding/echo-white.png")}
               style={headerStyles.logo}
               resizeMode="contain"
             />
@@ -108,11 +103,7 @@ export default function MainFeed() {
             <ButtonIcon
               name="rectangle.portrait.on.rectangle.portrait.angled"
               weight="bold"
-              onPress={() =>
-                navigation.navigate("OnboardingStack", {
-                  screen: "BucketListOnboarding",
-                })
-              }
+              onPress={() => navigation.navigate("EarlyAccessScreen")}
               style={symbolStyles.allMoments}
             />
           </View>
@@ -146,7 +137,7 @@ export default function MainFeed() {
     });
   }, [fetchMore, hasNextPage, nextCursor]);
 
-  // Handle refresh
+  // Handle pull-to-refresh
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();

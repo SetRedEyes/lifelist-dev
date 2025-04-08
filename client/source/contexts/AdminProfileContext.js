@@ -491,8 +491,15 @@ export const AdminProfileProvider = ({ children }) => {
 
   const addCollage = async (collage) => {
     try {
-      // Add the new collage to the beginning of the state
-      const updatedCollages = [collage, ...collages];
+      // Add the new collage to the collages state
+      const updatedCollages = [...collages, collage];
+
+      // Sort collages by createdAt in descending order (newest first)
+      updatedCollages.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      // Update the collages state
       setCollages(updatedCollages);
 
       // Increment the collages count in the state
@@ -583,6 +590,8 @@ export const AdminProfileProvider = ({ children }) => {
       const { data } = await postMomentMutation({
         variables: { cameraShotId: momentInput.cameraShotId },
       });
+
+      console.log(data);
 
       if (data?.postMoment?.success) {
         // Create the new moment object

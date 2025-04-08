@@ -16,7 +16,7 @@ export const headerStyles = StyleSheet.create({
   },
   logo: {
     marginTop: 6,
-    width: 90,
+    width: 25,
   },
   createButtonText: {
     fontSize: 12,

@@ -12,6 +12,7 @@ import { symbolStyles } from "../../../styles/components/symbolStyles";
 import { headerStyles } from "../../../styles/components";
 import { GET_USER_PROFILE } from "../../../utils/queries/userQueries";
 import { useHeaderHeight } from "@react-navigation/elements";
+import { useFeedRefresh } from "../../../contexts/FeedRefreshContext";
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -23,7 +24,7 @@ export default function CollagePreview() {
   const { images, caption, taggedUsers, coverImage } = collage;
   const headerHeight = useHeaderHeight();
 
-  console.log(coverImage);
+  const { setRefreshMainFeed } = useFeedRefresh();
 
   // Calculate dynamic collage height
   const collageHeight = screenHeight - headerHeight - 83;
@@ -62,9 +63,18 @@ export default function CollagePreview() {
 
       if (data?.createCollage?.success) {
         const newCollage = data.createCollage.collage;
+
+        // Add the new collage to local state or cache
         await addCollage(newCollage);
+
+        // Reset the collage context
         resetCollage();
-        navigation.navigate("MainFeed", { refresh: true });
+
+        // Trigger MainFeed to refresh via FeedRefreshContext
+        setRefreshMainFeed(true);
+
+        // Navigate back to the MainFeed
+        navigation.navigate("MainFeed");
       } else {
         throw new Error(
           data?.createCollage?.message || "Failed to create collage."

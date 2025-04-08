@@ -29,7 +29,7 @@ export default function CollageCard({
   const handlePress = () => {
     navigation.navigate("CollageStack", {
       screen: "ViewCollage",
-      params: { collages, initialIndex: index, onUnarchive },
+      params: { collageId, collages, initialIndex: index, onUnarchive },
     });
   };
 

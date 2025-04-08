@@ -1,4 +1,4 @@
-import { Moment, CameraShot, User } from "../../../../models/index.mjs";
+import { CameraShot, Moment, User } from "../../../../models/index.mjs";
 
 export const postMoment = async (_, { cameraShotId }, { user }) => {
   if (!user) {

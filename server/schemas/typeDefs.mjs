@@ -685,7 +685,7 @@ type ExperienceDetails {
     unrepostCollage(collageId: ID!): CollageIdResponse
     likeCollage(collageId: ID!): ActionResponse
     unlikeCollage(collageId: ID!): ActionResponse!
-    archiveCollage(collageId: ID!): CollageIdResponse
+    archiveCollage(collageId: ID!): CollageActionResponse
     unarchiveCollage(collageId: ID!): CollageCollageResponse
     createComment(collageId: ID!, text: String!): ActionResponse!
     editComment(commentId: ID!, newText: String!): ActionResponse!
@@ -791,6 +791,12 @@ type ExperienceDetails {
     success: Boolean!
     message: String!
     collageId: ID!
+  }
+
+  type CollageActionResponse {
+    success: Boolean!
+    message: String
+    collage: Collage
   }
 
   type CreateAccessCodeResponse {

@@ -26,6 +26,8 @@ export default function DevelopingRoll() {
     isDevelopingRollCacheInitialized,
   } = useDevelopingRoll();
 
+  console.log(developingShots);
+
   // Ensure the developing roll cache is initialized
   useEffect(() => {
     if (!isDevelopingRollCacheInitialized) {
