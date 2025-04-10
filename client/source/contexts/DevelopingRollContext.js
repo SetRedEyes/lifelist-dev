@@ -103,9 +103,10 @@ export const DevelopingRollProvider = ({ children }) => {
 
   // Decrease shotsLeft when a shot is added
   const decrementShotsLeft = async () => {
-    if (shotsLeft <= 0) {
-      throw new Error("No shots left for today.");
-    }
+    //! Denis: uncomment
+    // if (shotsLeft <= 0) {
+    //   throw new Error("No shots left for today.");
+    // }
 
     try {
       const updatedShotsLeft = shotsLeft - 1;
