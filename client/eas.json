@@ -2,8 +2,9 @@
   "build": {
     "development": {
       "distribution": "internal",
+      "developmentClient": true,
       "ios": {
-        "simulator": false
+        "simulator": true
       }
     },
     "production": {

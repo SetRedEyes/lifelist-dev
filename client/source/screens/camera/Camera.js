@@ -116,15 +116,17 @@ export default function Camera({ navigation }) {
     setIsProcessing(true);
     console.log("Starting photo capture...");
 
-    if (shotsLeft <= 0) {
-      alert("No shots left for today!");
-      setIsProcessing(false);
-      return;
-    }
+    //! Denis: uncomment
+    // if (shotsLeft <= 0) {
+    //   alert("No shots left for today!");
+    //   setIsProcessing(false);
+    //   return;
+    // }
 
     try {
       console.log("Decrementing shots left...");
-      await decrementShotsLeft();
+      //! Denis: uncomment
+      // await decrementShotsLeft();
 
       if (cameraRef.current) {
         try {
