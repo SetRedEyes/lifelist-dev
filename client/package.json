@@ -39,7 +39,7 @@
     "expo-contacts": "~14.0.2",
     "expo-dev-client": "~5.0.9",
     "expo-file-system": "~18.0.3",
-    "expo-gl": "^15.0.4",
+    "expo-gl": "~15.0.5",
     "expo-image": "^2.0.3",
     "expo-image-manipulator": "^13.0.6",
     "expo-image-picker": "~16.0.2",
