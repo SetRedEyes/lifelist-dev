@@ -11,13 +11,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "bundleIdentifier": "com.joinlifelist.lifelist",
       "buildNumber": "1.0.5",
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "associatedDomains": ["applinks:joinlifelist.com"],
+      "associatedDomains": [
+        "applinks:joinlifelist.com"
+      ],
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images.",
         "NSCameraUsageDescription": "This app needs access to your camera to take photos.",
@@ -44,7 +48,7 @@
         }
       ],
       [
-      "expo-contacts",
+        "expo-contacts",
         {
           "contactsPermission": "Allow LifeList to access your contacts."
         }
@@ -53,9 +57,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "4fa51d41-7f46-4644-8ed9-4ff160efb297"
+        "projectId": "a09603d5-2e00-446f-9f5b-99041154675d"
       }
     },
-    "owner": "wyattbensman"
+    "owner": "setredeyes"
   }
 }
