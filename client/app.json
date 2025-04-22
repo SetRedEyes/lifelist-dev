@@ -27,7 +27,7 @@
       "package": "com.joinlifelist.lifelist"
     },
     "ios": {
-      "bundleIdentifier": "com.joinlifelist.lifelist",
+      "bundleIdentifier": "com.joinlifelist.lifelistdev",
       "buildNumber": "1.0.5",
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",

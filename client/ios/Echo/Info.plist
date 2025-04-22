@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.joinlifelist.lifelist</string>
+          <string>com.joinlifelist.lifelistdev</string>
         </array>
       </dict>
       <dict>
