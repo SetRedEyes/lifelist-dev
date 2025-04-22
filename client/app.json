@@ -11,16 +11,31 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ],
+      "package": "com.joinlifelist.lifelist"
     },
     "ios": {
       "bundleIdentifier": "com.joinlifelist.lifelist",
       "buildNumber": "1.0.5",
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "associatedDomains": ["applinks:joinlifelist.com"],
+      "associatedDomains": [
+        "applinks:joinlifelist.com"
+      ],
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images.",
         "NSCameraUsageDescription": "This app needs access to your camera to take photos.",
