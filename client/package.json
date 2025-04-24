@@ -43,6 +43,7 @@
     "expo-dev-client": "~5.0.20",
     "expo-file-system": "~18.0.12",
     "expo-gl": "~15.0.5",
+    "expo-gl-cpp": "^11.4.0",
     "expo-image": "~2.0.7",
     "expo-image-manipulator": "^13.0.6",
     "expo-image-picker": "~16.0.6",
