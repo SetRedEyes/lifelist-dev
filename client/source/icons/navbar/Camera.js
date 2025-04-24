@@ -5,7 +5,7 @@ export default function CameraIcon() {
     <Image
       source={require("./CameraIcon.png")}
       style={styles.image}
-      resizeMode="contain"
+      resizeMode='contain'
     />
   );
 }
