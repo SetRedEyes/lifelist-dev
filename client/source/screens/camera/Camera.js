@@ -21,8 +21,17 @@ import MessageAlert from "../../alerts/MessageAlert";
 import * as ImageManipulator from "expo-image-manipulator";
 import { headerStyles, layoutStyles } from "../../styles/components/index";
 
-const screenWidth = Dimensions.get("window").width;
-const cameraHeight = (screenWidth * 3) / 2;
+import {
+  useImage,
+  ImageFormat,
+  useCanvasRef,
+} from "@shopify/react-native-skia";
+import * as FileSystem from "expo-file-system";
+import { Buffer } from "buffer";
+import { ApplyLut } from "./ApplyLut";
+
+export const SCREEN_WIDTH = Dimensions.get("window").width;
+export const CAMERA_HEIGHT = (SCREEN_WIDTH * 3) / 2;
 
 export default function Camera({ navigation }) {
   const [showCameraOptions, setShowCameraOptions] = useState(false);
@@ -34,6 +43,9 @@ export default function Camera({ navigation }) {
   const cameraRef = useRef(null);
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const blurAnim = useRef(new Animated.Value(0)).current;
+  const [photoUri, setPhotoUri] = useState(null);
+  const photoImg = useImage(photoUri);
+  const canvasRef = useCanvasRef();
 
   const {
     shotsLeft, // Access shotsLeft from context
@@ -68,8 +80,8 @@ export default function Camera({ navigation }) {
       headerLeft: () => (
         <View style={headerStyles.headerLeft}>
           <ButtonIcon
-            name="xmark"
-            weight="medium"
+            name='xmark'
+            weight='medium'
             onPress={() => navigation.goBack()} // Navigate back
             style={symbolStyles.xmark}
           />
@@ -112,6 +124,35 @@ export default function Camera({ navigation }) {
   const [createCameraShot] = useMutation(CREATE_CAMERA_SHOT);
   const [getPresignedUrl] = useLazyQuery(GET_PRESIGNED_URL);
 
+  useEffect(() => {
+    if (!photoUri) return;
+
+    const applyLUT = async () => {
+      try {
+        const skImage = canvasRef.current.makeImageSnapshot();
+        const bytes = skImage.encodeToBytes(ImageFormat.JPEG, 100);
+        const base64 = Buffer.from(bytes).toString("base64");
+        const outPath = FileSystem.cacheDirectory + `lut_${Date.now()}.jpg`;
+        await FileSystem.writeAsStringAsync(outPath, base64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const resizedUri = await resizeImage(outPath, 1280, 1920);
+        const thumbUri = await resizeImage(outPath, 400, 600);
+        const newShot = await uploadShot(resizedUri, thumbUri);
+        if (newShot) addShot(newShot);
+      } catch (error) {
+        setIsProcessing(false);
+        console.error("Error applying LUT:", error);
+      } finally {
+        console.log("Resetting processing state...");
+        setIsProcessing(false);
+        setMessageVisible(true);
+        setTimeout(() => setMessageVisible(false), 1500);
+      }
+    };
+    applyLUT();
+  }, [photoImg]);
+
   const handleTakePhoto = async () => {
     setIsProcessing(true);
     console.log("Starting photo capture...");
@@ -133,19 +174,7 @@ export default function Camera({ navigation }) {
           const photo = await cameraRef.current.takePictureAsync({
             quality: 1,
           });
-
-          // APPLY FILTER
-
-          const resizedUri = await resizeImage(photo.uri, 1280, 1920);
-          const thumbnailUri = await resizeImage(photo.uri, 400, 600);
-
-          const newShot = await uploadShot(resizedUri, thumbnailUri);
-
-          console.log(newShot);
-
-          if (newShot) {
-            addShot(newShot); // Add the new shot to developing roll
-          }
+          setPhotoUri(photo.uri);
         } catch (error) {
           console.error("Error taking photo:", error);
           alert("Failed to capture the photo. Please try again.");
@@ -154,11 +183,6 @@ export default function Camera({ navigation }) {
     } catch (error) {
       console.error("Error updating shotsLeft:", error);
       alert("Failed to update your shots. Please try again.");
-    } finally {
-      console.log("Resetting processing state...");
-      setIsProcessing(false);
-      setMessageVisible(true);
-      setTimeout(() => setMessageVisible(false), 1500);
     }
   };
 
@@ -240,7 +264,7 @@ export default function Camera({ navigation }) {
     <View style={layoutStyles.wrapper}>
       <CameraView
         ref={cameraRef}
-        style={{ height: cameraHeight, width: screenWidth }}
+        style={{ height: CAMERA_HEIGHT, width: SCREEN_WIDTH }}
         facing={facing}
         flash={flash}
       />
@@ -252,16 +276,16 @@ export default function Camera({ navigation }) {
             opacity: blurAnim,
             justifyContent: "center",
             alignItems: "center",
-            width: screenWidth,
-            height: cameraHeight,
+            width: SCREEN_WIDTH,
+            height: CAMERA_HEIGHT,
           }}
         >
-          <ActivityIndicator size="large" color="#ffffff" />
+          <ActivityIndicator size='large' color='#ffffff' />
           <Text style={{ color: "#ffffff", marginTop: 16 }}>Processing...</Text>
         </Animated.View>
       )}
       <MessageAlert
-        message="Added to Developing Roll"
+        message='Added to Developing Roll'
         visible={messageVisible}
       />
       <CameraFooter
@@ -276,6 +300,7 @@ export default function Camera({ navigation }) {
         onRequestClose={() => setShowCameraOptions(false)}
         setCameraType={handleSetCameraType}
       />
+      <ApplyLut photo={photoImg} cameraType={cameraType} ref={canvasRef} />
     </View>
   );
 }
