@@ -113,11 +113,9 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer linking={linking}>
-      {/* //! Denis: uncomment */}
-      {/* {isEarlyAccessUnlocked === false ? (
-        <AuthenticationStack initialRouteName="EarlyAccess" />
-      ) : */}
-      {!isAuthenticated ? (
+      {isEarlyAccessUnlocked === false ? (
+        <AuthenticationStack initialRouteName='EarlyAccess' />
+      ) : !isAuthenticated ? (
         <AuthenticationStack initialRouteName='Login' />
       ) : !isOnboardingComplete ||
         isOnboardingComplete === false ||

@@ -25,7 +25,7 @@ const LUT_SHADER_CODE = `
   }
 `;
 
-export const ApplyLut = forwardRef(({ photo, cameraType }, ref) => {
+export const LUTShader = forwardRef(({ photo, cameraType }, ref) => {
   const getLutByCameraType = (cameraType) => {
     switch (cameraType) {
       case "Standard":
@@ -44,6 +44,7 @@ export const ApplyLut = forwardRef(({ photo, cameraType }, ref) => {
   const shaderEffect = Skia.RuntimeEffect.Make(LUT_SHADER_CODE);
 
   if (!photo && !selectedLut && !shaderEffect) return null;
+
   return (
     <Canvas
       ref={ref}
@@ -73,4 +74,4 @@ export const ApplyLut = forwardRef(({ photo, cameraType }, ref) => {
     </Canvas>
   );
 });
-ApplyLut.displayName = "ApplyLut";
+LUTShader.displayName = "LUTShader";

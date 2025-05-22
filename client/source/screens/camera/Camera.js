@@ -1,34 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Dimensions,
-  Animated,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
-import ButtonIcon from "../../icons/ButtonIcon";
-import { symbolStyles } from "../../styles/components/symbolStyles";
-import CameraHeader from "./components/CameraHeader";
-import CameraFooter from "./components/CameraFooter";
-import CameraOptions from "../../menus/camera/CameraOptions";
-import { CameraView } from "expo-camera";
-import { GET_PRESIGNED_URL } from "../../utils/queries/cameraQueries";
-import { CREATE_CAMERA_SHOT } from "../../utils/mutations/cameraMutations";
-import { useLazyQuery, useMutation } from "@apollo/client";
+import { View, Text, Dimensions, Animated } from "react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { useDevelopingRoll } from "../../contexts/DevelopingRollContext";
-import MessageAlert from "../../alerts/MessageAlert";
-import * as ImageManipulator from "expo-image-manipulator";
 import { headerStyles, layoutStyles } from "../../styles/components/index";
-
-import {
-  useImage,
-  ImageFormat,
-  useCanvasRef,
-} from "@shopify/react-native-skia";
-import * as FileSystem from "expo-file-system";
-import { Buffer } from "buffer";
-import { ApplyLut } from "./ApplyLut";
+import CameraHeader from "./components/CameraHeader";
+import CameraOptions from "../../menus/camera/CameraOptions";
+import CameraFooter from "./components/CameraFooter";
+import { symbolStyles } from "../../styles/components/symbolStyles";
+import ButtonIcon from "../../icons/ButtonIcon";
+import { LutImageProcessor } from "./LutImageProcessor";
 
 export const SCREEN_WIDTH = Dimensions.get("window").width;
 export const CAMERA_HEIGHT = (SCREEN_WIDTH * 3) / 2;
@@ -39,23 +19,28 @@ export default function Camera({ navigation }) {
   const [facing, setFacing] = useState("back");
   const [flash, setFlash] = useState("off");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [messageVisible, setMessageVisible] = useState(false);
   const cameraRef = useRef(null);
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const blurAnim = useRef(new Animated.Value(0)).current;
   const [photoUri, setPhotoUri] = useState(null);
-  const photoImg = useImage(photoUri);
-  const canvasRef = useCanvasRef();
 
   const {
     shotsLeft, // Access shotsLeft from context
-    addShot,
     decrementShotsLeft,
     initializeDevelopingRoll,
     isDevelopingRollCacheInitialized,
   } = useDevelopingRoll();
 
-  // Initialize DevelopingRollContext cache
+  const [requestPermission] = useCameraPermissions();
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await requestPermission();
+      if (status !== "granted") {
+        alert("Camera permission is required!");
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     if (!isDevelopingRollCacheInitialized) {
       initializeDevelopingRoll();
@@ -121,53 +106,19 @@ export default function Camera({ navigation }) {
     setCameraType(type);
   };
 
-  const [createCameraShot] = useMutation(CREATE_CAMERA_SHOT);
-  const [getPresignedUrl] = useLazyQuery(GET_PRESIGNED_URL);
-
-  useEffect(() => {
-    if (!photoUri) return;
-
-    const applyLUT = async () => {
-      try {
-        const skImage = canvasRef.current.makeImageSnapshot();
-        const bytes = skImage.encodeToBytes(ImageFormat.JPEG, 100);
-        const base64 = Buffer.from(bytes).toString("base64");
-        const outPath = FileSystem.cacheDirectory + `lut_${Date.now()}.jpg`;
-        await FileSystem.writeAsStringAsync(outPath, base64, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        const resizedUri = await resizeImage(outPath, 1280, 1920);
-        const thumbUri = await resizeImage(outPath, 400, 600);
-        const newShot = await uploadShot(resizedUri, thumbUri);
-        if (newShot) addShot(newShot);
-      } catch (error) {
-        setIsProcessing(false);
-        console.error("Error applying LUT:", error);
-      } finally {
-        console.log("Resetting processing state...");
-        setIsProcessing(false);
-        setMessageVisible(true);
-        setTimeout(() => setMessageVisible(false), 1500);
-      }
-    };
-    applyLUT();
-  }, [photoImg]);
-
   const handleTakePhoto = async () => {
     setIsProcessing(true);
     console.log("Starting photo capture...");
 
-    //! Denis: uncomment
-    // if (shotsLeft <= 0) {
-    //   alert("No shots left for today!");
-    //   setIsProcessing(false);
-    //   return;
-    // }
+    if (shotsLeft <= 0) {
+      alert("No shots left for today!");
+      setIsProcessing(false);
+      return;
+    }
 
     try {
       console.log("Decrementing shots left...");
-      //! Denis: uncomment
-      // await decrementShotsLeft();
+      await decrementShotsLeft();
 
       if (cameraRef.current) {
         try {
@@ -186,80 +137,6 @@ export default function Camera({ navigation }) {
     }
   };
 
-  const resizeImage = async (uri, width, height) => {
-    const result = await ImageManipulator.manipulateAsync(
-      uri,
-      [{ resize: { width, height } }],
-      { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
-    );
-    return result.uri;
-  };
-
-  const uploadShot = async (originalUri, thumbnailUri) => {
-    const originalFile = await uriToFile(originalUri);
-    const thumbnailFile = await uriToFile(thumbnailUri);
-
-    const originalPresigned = await getPresignedUrl({
-      variables: {
-        folder: "camera-images",
-        fileName: originalFile.name,
-        fileType: originalFile.type,
-      },
-    });
-
-    const thumbnailPresigned = await getPresignedUrl({
-      variables: {
-        folder: "camera-images",
-        fileName: thumbnailFile.name,
-        fileType: thumbnailFile.type,
-      },
-    });
-
-    await uploadToS3(
-      originalUri,
-      originalPresigned.data.getPresignedUrl.presignedUrl
-    );
-    await uploadToS3(
-      thumbnailUri,
-      thumbnailPresigned.data.getPresignedUrl.presignedUrl
-    );
-
-    const result = await createCameraShot({
-      variables: {
-        image: originalPresigned.data.getPresignedUrl.fileUrl,
-        thumbnail: thumbnailPresigned.data.getPresignedUrl.fileUrl,
-      },
-    });
-
-    console.log("Mutation Result:", result.data.createCameraShot);
-
-    if (result.data.createCameraShot.success) {
-      return result.data.createCameraShot.cameraShot;
-    } else {
-      throw new Error(result.data.createCameraShot.message);
-    }
-  };
-
-  const uriToFile = async (uri) => {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    return new File([blob], `photo_${Date.now()}.jpg`, { type: blob.type });
-  };
-
-  const uploadToS3 = async (fileUri, presignedUrl) => {
-    const response = await fetch(fileUri);
-    const blob = await response.blob();
-    await fetch(presignedUrl, { method: "PUT", body: blob });
-  };
-
-  useEffect(() => {
-    Animated.timing(blurAnim, {
-      toValue: isProcessing ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [isProcessing]);
-
   return (
     <View style={layoutStyles.wrapper}>
       <CameraView
@@ -267,26 +144,6 @@ export default function Camera({ navigation }) {
         style={{ height: CAMERA_HEIGHT, width: SCREEN_WIDTH }}
         facing={facing}
         flash={flash}
-      />
-      {isProcessing && (
-        <Animated.View
-          style={{
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            opacity: blurAnim,
-            justifyContent: "center",
-            alignItems: "center",
-            width: SCREEN_WIDTH,
-            height: CAMERA_HEIGHT,
-          }}
-        >
-          <ActivityIndicator size='large' color='#ffffff' />
-          <Text style={{ color: "#ffffff", marginTop: 16 }}>Processing...</Text>
-        </Animated.View>
-      )}
-      <MessageAlert
-        message='Added to Developing Roll'
-        visible={messageVisible}
       />
       <CameraFooter
         handleTakePhoto={handleTakePhoto}
@@ -300,7 +157,13 @@ export default function Camera({ navigation }) {
         onRequestClose={() => setShowCameraOptions(false)}
         setCameraType={handleSetCameraType}
       />
-      <ApplyLut photo={photoImg} cameraType={cameraType} ref={canvasRef} />
+      <LutImageProcessor
+        photoUri={photoUri}
+        cameraType={cameraType}
+        isProcessing={isProcessing}
+        setIsProcessing={setIsProcessing}
+        setPhotoUri={setPhotoUri}
+      />
     </View>
   );
 }
