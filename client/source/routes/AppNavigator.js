@@ -114,13 +114,13 @@ export default function AppNavigator() {
   return (
     <NavigationContainer linking={linking}>
       {isEarlyAccessUnlocked === false ? (
-        <AuthenticationStack initialRouteName="EarlyAccess" />
+        <AuthenticationStack initialRouteName='EarlyAccess' />
       ) : !isAuthenticated ? (
-        <AuthenticationStack initialRouteName="Login" />
+        <AuthenticationStack initialRouteName='Login' />
       ) : !isOnboardingComplete ||
         isOnboardingComplete === false ||
         isOnboardingComplete === null ? (
-        <AuthenticationStack initialRouteName="BucketListOnboarding" />
+        <AuthenticationStack initialRouteName='BucketListOnboarding' />
       ) : (
         <AdminProfileProvider>
           <ProfileProvider>
@@ -139,7 +139,7 @@ export default function AppNavigator() {
                               }}
                             >
                               <Stack.Screen
-                                name="MainApp"
+                                name='MainApp'
                                 component={TabNavigator}
                               />
                             </Stack.Navigator>

@@ -21,18 +21,18 @@ export default function SetProfilePicture() {
       headerLeft: () => (
         <View style={headerStyles.headerLeft}>
           <ButtonIcon
-            name="chevron.backward"
+            name='chevron.backward'
             onPress={handleBackPress}
             style={symbolStyles.backArrow}
-            weight="bold"
+            weight='bold'
           />
         </View>
       ),
       headerRight: () => (
         <View style={headerStyles.headerRight}>
           <ButtonIcon
-            name="chevron.forward"
-            weight="bold"
+            name='chevron.forward'
+            weight='bold'
             tintColor={"#6AB952"}
             style={symbolStyles.backArrow}
             onPress={handleNextStep}
@@ -114,7 +114,7 @@ export default function SetProfilePicture() {
               <Image
                 source={{ uri: profilePicture }}
                 style={authenticationStyles.profileImage}
-                resizeMode="cover"
+                resizeMode='cover'
               />
             ) : (
               <Text style={authenticationStyles.placeholderText}>
@@ -127,7 +127,7 @@ export default function SetProfilePicture() {
             backgroundColor={profilePicture ? "#6AB95230" : "#1c1c1c"}
             borderColor={profilePicture ? "#6AB95250" : "#1c1c1c"}
             textColor={profilePicture ? "#6AB952" : "#696969"}
-            width="74%"
+            width='74%'
             text={profilePicture ? "Next Step" : "Skip"}
             onPress={handleNextStep}
           />
